@@ -70,7 +70,7 @@ private:
     QLabel *flash_duration_label_;
     QSlider *flash_duration_slider_;
     QLabel *flash_duration_value_label_;
-    int firefly_exposure_ = 1000; // microseconds
+    int firefly_exposure_ = 100; // microseconds
     QLabel *firefly_exposure_label_;
     QSlider *firefly_exposure_slider_;
     QLabel *firefly_exposure_value_label_;
@@ -78,7 +78,7 @@ private:
     QLabel *ximea_gain_label_;
     QSlider *ximea_gain_slider_;
     QLabel *ximea_gain_value_label_;
-    int ximea_exposure_ = 100000; // microseconds
+    int ximea_exposure_ = 1000; // microseconds
     QLabel *ximea_exposure_label_;
     QSlider *ximea_exposure_slider_;
     QLabel *ximea_exposure_value_label_;

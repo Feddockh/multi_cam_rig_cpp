@@ -25,7 +25,7 @@ firefly_left:
   acquisition_mode: 'SingleFrame'
   exposure_mode: 'Timed'
   exposure_auto: 'Off'
-  exposure_time: 1000.0
+  exposure_time: 100.0
   acquisition_frame_rate_enable: true
   trigger_mode: 'On'
   trigger_selector: 'FrameStart'
@@ -39,7 +39,7 @@ firefly_left:
   black_level: 0.0
   black_level_clamping_enable: false
   gamma: 1.0
-  gamma_enable: true
+  gamma_enable: false
   width: 1440
   height: 1080
   pixel_format: 'BGR8' # Color image
@@ -58,7 +58,7 @@ firefly_left.exposure_controller:
   brightness_target: 120
   brightness_tolerance: 255
   max_exposure_time: 100000
-  min_exposure_time: 1000
+  min_exposure_time: 10
   max_gain: 0.0
   gain_priority: false
   type: 'master'
@@ -77,7 +77,7 @@ firefly_right:
   acquisition_mode: 'SingleFrame'
   exposure_mode: 'Timed'
   exposure_auto: 'Off'
-  exposure_time: 1000.0
+  exposure_time: 100.0
   acquisition_frame_rate_enable: true
   trigger_mode: 'On'
   trigger_selector: 'FrameStart'
@@ -91,7 +91,7 @@ firefly_right:
   black_level: 0.0
   black_level_clamping_enable: false
   gamma: 1.0
-  gamma_enable: true
+  gamma_enable: false
   width: 1440
   height: 1080
   pixel_format: 'BGR8' # Color image
@@ -110,7 +110,7 @@ firefly_right.exposure_controller:
   brightness_target: 120
   brightness_tolerance: 255
   max_exposure_time: 100000
-  min_exposure_time: 1000
+  min_exposure_time: 10
   max_gain: 0.0
   gain_priority: false
   type: 'follower'

@@ -137,7 +137,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     // Create a horizontal layout for the slider and its current value display
     auto firefly_exposure_layout = new QHBoxLayout();
     firefly_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    firefly_exposure_slider_->setRange(500, 100000);
+    firefly_exposure_slider_->setRange(10, 200);
     firefly_exposure_slider_->setMinimumHeight(80);
     firefly_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     firefly_exposure_slider_->setTickInterval(500);
@@ -176,13 +176,13 @@ DirectorGui::DirectorGui(int argc, char **argv)
             [this](int value) { ximea_gain_value_label_->setText(QString::number(value / 10.0, 'f', 1)); });
 
     // Ximea Exposure Control
-    ximea_exposure_label_ = new QLabel("Ximea Exposure (500 - 300000 us)", this);
+    ximea_exposure_label_ = new QLabel("Ximea Exposure (500 - 10000 us)", this);
     ximea_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(ximea_exposure_label_);
 
     auto ximea_exposure_layout = new QHBoxLayout();
     ximea_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    ximea_exposure_slider_->setRange(500, 300000);
+    ximea_exposure_slider_->setRange(500, 10000);
     ximea_exposure_slider_->setMinimumHeight(80);
     ximea_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     ximea_exposure_slider_->setTickInterval(500);
