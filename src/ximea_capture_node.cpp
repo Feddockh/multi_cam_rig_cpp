@@ -6,9 +6,13 @@ XimeaCaptureNode::XimeaCaptureNode()
     : Node("ximea_capture_node"), xi_handle_(nullptr), camera_initialized_(false)
 {
     // Declare and get parameters
+    declare_parameter("save_images", false);
+    declare_parameter("save_dir", "/tmp/multi_cam_images");
     declare_parameter<std::string>("director_topic", "/multi_cam_rig/director");
     declare_parameter<std::string>("ximea_image_topic", "/multi_cam_rig/ximea/image");
 
+    save_images_ = get_parameter("save_images").as_bool();
+    save_dir_ = get_parameter("save_dir").as_string();
     std::string director_topic = get_parameter("director_topic").as_string();
     std::string image_topic = get_parameter("ximea_image_topic").as_string();
 
@@ -104,7 +108,11 @@ void XimeaCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr 
     // Check if the message starts with "capture "
     if (msg->data.rfind("capture ", 0) == 0)
     {
+        // Extract the image ID from the message
         RCLCPP_INFO(this->get_logger(), "Received capture command: %s", msg->data.c_str());
+        image_id_ = std::stoi(msg->data.substr(8));
+
+        // Capture the image
         if (camera_initialized_)
         {
             capture_image();
@@ -147,10 +155,10 @@ void XimeaCaptureNode::capture_image()
     cv::Mat cvImageBGR(image.height, image.width, CV_8UC3, image.bp);
 
     // Clone the image to ensure data integrity
-    cv::Mat cvImageClone = cvImageBGR.clone();
+    image_ = cvImageBGR.clone();
 
     // Create ROS Image message
-    auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", cvImageClone).toImageMsg();
+    auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image_).toImageMsg();
 
     // Publish the image
     image_publisher_->publish(*image_msg);
@@ -159,6 +167,24 @@ void XimeaCaptureNode::capture_image()
     completion_msg.data = "XIMEA Complete";
     director_publisher_->publish(completion_msg);
     RCLCPP_INFO(this->get_logger(), "Published XIMEA image.");
+
+    if (save_images_)
+    {
+        save_image();
+    }
+}
+
+void XimeaCaptureNode::save_image()
+{
+    if (!std::filesystem::exists(save_dir_))
+    {
+        std::string image_path = save_dir_ + "/ximea_image_" + std::to_string(image_id_) + ".jpg";
+        cv::imwrite(image_path, image_);
+    }
+    else
+    {
+        RCLCPP_WARN(this->get_logger(), "Save directory does not exist: %s", save_dir_.c_str());
+    }
 }
 
 int main(int argc, char *argv[])

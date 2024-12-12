@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(multi_cam_rig_cpp)
 
-# Default to C++14
+# Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 # Find packages
@@ -72,7 +72,8 @@ target_link_libraries(director_gui Qt5::Core Qt5::Widgets)
 ament_target_dependencies(director_gui rclcpp std_msgs sensor_msgs cv_bridge)
 
 add_executable(firefly_capture_node src/firefly_capture_node.cpp)
-ament_target_dependencies(firefly_capture_node rclcpp std_msgs sensor_msgs serial_driver)
+ament_target_dependencies(firefly_capture_node rclcpp std_msgs sensor_msgs serial_driver cv_bridge OpenCV)
+target_link_libraries(firefly_capture_node ${OpenCV_LIBRARIES})
 
 add_executable(ximea_capture_node src/ximea_capture_node.cpp)
 ament_target_dependencies(ximea_capture_node rclcpp std_msgs sensor_msgs cv_bridge OpenCV)

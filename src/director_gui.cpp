@@ -3,8 +3,9 @@
 DirectorGui::DirectorGui(int argc, char **argv)
     : QWidget(), rclcpp::Node("director_gui"), image_count_(1)
 {
-
-    // ROS 2 setup
+    // Declare and get parameters
+    declare_parameter("save_images", false);
+    declare_parameter("save_dir", "/tmp/multi_cam_images");
     declare_parameter("director_topic", "/multi_cam_rig/director");
     declare_parameter("firefly_left_image_topic", "/flir_node/firefly_left/image_raw");
     declare_parameter("firefly_right_image_topic", "/flir_node/firefly_right/image_raw");
@@ -12,6 +13,8 @@ DirectorGui::DirectorGui(int argc, char **argv)
     declare_parameter("zed_left_image_topic", "/multi_cam_rig/zed/left_image");
     declare_parameter("zed_right_image_topic", "/multi_cam_rig/zed/right_image");
 
+    save_images_ = get_parameter("save_images").as_bool();
+    save_dir_ = get_parameter("save_dir").as_string();
     std::string director_topic = get_parameter("director_topic").as_string();
     std::string firefly_left_topic = get_parameter("firefly_left_image_topic").as_string();
     std::string firefly_right_topic = get_parameter("firefly_right_image_topic").as_string();
@@ -19,6 +22,17 @@ DirectorGui::DirectorGui(int argc, char **argv)
     std::string zed_left_topic = get_parameter("zed_left_image_topic").as_string();
     std::string zed_right_topic = get_parameter("zed_right_image_topic").as_string();
 
+    // Create the save directory if it doesn't exist
+    if (save_images_)
+    {
+        if (!std::filesystem::exists(save_dir_))
+        {
+            std::filesystem::create_directories(save_dir_);
+            RCLCPP_INFO(this->get_logger(), "Created save directory: %s", save_dir_.c_str());
+        }
+    }
+
+    // Set up director's publisher and subscriber
     publisher_ = create_publisher<std_msgs::msg::String>(director_topic, 10);
     subscriber_ = create_subscription<std_msgs::msg::String>(
         director_topic, 10, std::bind(&DirectorGui::director_callback, this, std::placeholders::_1));

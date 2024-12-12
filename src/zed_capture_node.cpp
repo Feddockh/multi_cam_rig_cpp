@@ -3,10 +3,15 @@
 ZedCaptureNode::ZedCaptureNode()
     : Node("zed_capture_node"), camera_initialized_(false)
 {
+    // Declare and get parameters
+    declare_parameter("save_images", false);
+    declare_parameter("save_dir", "/tmp/multi_cam_images");
     declare_parameter("director_topic", "/multi_cam_rig/director");
     declare_parameter("left_image_topic", "/multi_cam_rig/zed/left_image");
     declare_parameter("right_image_topic", "/multi_cam_rig/zed/right_image");
-    
+
+    save_images_ = get_parameter("save_images").as_bool();
+    save_dir_ = get_parameter("save_dir").as_string();
     std::string director_topic = get_parameter("director_topic").as_string();
     std::string left_image_topic = get_parameter("left_image_topic").as_string();
     std::string right_image_topic = get_parameter("right_image_topic").as_string();
@@ -60,7 +65,12 @@ void ZedCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr ms
     // Check if the message starts with "capture "
     if (msg->data.rfind("capture ", 0) == 0)
     {
+
+        // Extract the image ID from the message
         RCLCPP_INFO(this->get_logger(), "Received capture command: %s", msg->data.c_str());
+        image_id_ = std::stoi(msg->data.substr(8));
+
+        // Capture the image
         if (camera_initialized_)
         {
             capture_image();
@@ -93,12 +103,12 @@ void ZedCaptureNode::capture_image()
 
         // Split the image into left and right halves
         int width = cvImageBGR.cols / 2;
-        cv::Mat left_image = cvImageBGR(cv::Rect(0, 0, width, cvImageBGR.rows));
-        cv::Mat right_image = cvImageBGR(cv::Rect(width, 0, width, cvImageBGR.rows));
+        left_image_ = cvImageBGR(cv::Rect(0, 0, width, cvImageBGR.rows));
+        right_image_ = cvImageBGR(cv::Rect(width, 0, width, cvImageBGR.rows));
 
         // Convert to ROS message
-        auto left_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", left_image).toImageMsg();
-        auto right_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", right_image).toImageMsg();
+        auto left_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", left_image_).toImageMsg();
+        auto right_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", right_image_).toImageMsg();
 
         // Publish the images
         left_image_publisher_->publish(*left_msg);
@@ -108,10 +118,32 @@ void ZedCaptureNode::capture_image()
         completion_msg.data = "ZED Complete";
         director_publisher_->publish(completion_msg);
         RCLCPP_INFO(this->get_logger(), "Published ZED images.");
+
+        // Save the images
+        if (save_images_)
+        {
+            save_images();
+        }
     }
     else
     {
         RCLCPP_WARN(this->get_logger(), "Failed to grab image from ZED.");
+    }
+}
+
+void ZedCaptureNode::save_images()
+{
+    if (!std::filesystem::exists(save_dir_))
+    {
+        std::string left_image_path = save_dir_ + "/zed_left_" + std::to_string(image_id_) + ".jpg";
+        std::string right_image_path = save_dir_ + "/zed_right_" + std::to_string(image_id_) + ".jpg";
+        cv::imwrite(left_image_path, left_image_);
+        cv::imwrite(right_image_path, right_image_);
+        RCLCPP_INFO(this->get_logger(), "Saved ZED images.");
+    }
+    else
+    {
+        RCLCPP_WARN(this->get_logger(), "Save directory does not exist: %s", save_dir_.c_str());
     }
 }
 

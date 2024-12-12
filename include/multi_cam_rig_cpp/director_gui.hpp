@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <thread>
+#include <filesystem>
 
 class DirectorGui : public QWidget, public rclcpp::Node
 {
@@ -29,6 +30,8 @@ private:
     std::vector<rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr> image_subscribers_;
 
     int image_count_;
+    bool save_images_;
+    std::string save_dir_;
 
     static constexpr int WINDOW_HEIGHT = 800;
     static constexpr int WINDOW_WIDTH = 1200;
