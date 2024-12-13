@@ -102,13 +102,13 @@ install(DIRECTORY
 # Install the config files
 install(DIRECTORY
     config
-    DESTINATION share/${PROJECT_NAME}/config
+    DESTINATION share/${PROJECT_NAME}
 )
 
 # install the calibration files
 install(DIRECTORY
     calibration
-    DESTINATION share/${PROJECT_NAME}/calibration
+    DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()

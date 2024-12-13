@@ -217,12 +217,17 @@ int main(int argc, char **argv)
     auto gui = std::make_shared<DirectorGui>(argc, argv);
     gui->show();
 
-    // Spin in a separate thread
-    std::thread spin_thread([gui]()
-                            { rclcpp::spin(gui); });
+    // Start ROS spinning in another thread
+    std::thread spin_thread([gui]() {
+        rclcpp::spin(gui);
+        // Once spin() returns (due to shutdown), we instruct Qt to quit
+        QMetaObject::invokeMethod(QApplication::instance(), "quit", Qt::QueuedConnection);
+    });
 
+    // Run the Qt event loop
     int ret = app.exec();
 
+    // Cleanup after Qt loop ends
     rclcpp::shutdown();
     spin_thread.join();
 
