@@ -60,7 +60,7 @@ def generate_launch_description():
         [
             LaunchArg(
                 'config_file',
-                default_value=PJoin([FindPackageShare('multi_cam_rig'), 'config', 'firefly.yaml']),
+                default_value=PJoin([FindPackageShare('multi_cam_rig_cpp'), 'config', 'firefly.yaml']),
                 description='Path to the camera parameters YAML file.',
             ),
             LaunchArg(
@@ -70,7 +70,7 @@ def generate_launch_description():
             ),
             LaunchArg(
                 'calibration_directory',
-                default_value=PJoin([FindPackageShare('multi_cam_rig'), 'calibration']),
+                default_value=PJoin([FindPackageShare('multi_cam_rig_cpp'), 'calibration']),
                 description='root directory for camera calibration files',
             ),
             OpaqueFunction(function=launch_setup),
