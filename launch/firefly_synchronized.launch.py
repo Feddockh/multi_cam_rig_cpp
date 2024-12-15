@@ -30,11 +30,11 @@ def launch_setup(context, *args, **kwargs):
     config[camera_names[1]]['parameter_file'] = parameter_directory + '/firefly.yaml'
 
     # Get the serial numbers of the cameras
-    serial_numbers = [config[camera_name]['serial_number'] for camera_name in camera_names]
+    # serial_numbers = [config[camera_name]['serial_number'] for camera_name in camera_names]
 
     # Replace placeholders for the calibration files
-    config[camera_names[0]]['camerainfo_url'] = 'file://' + calibration_directory + '/' + serial_numbers[0] + '.yaml'
-    config[camera_names[1]]['camerainfo_url'] = 'file://' + calibration_directory + '/' + serial_numbers[1] + '.yaml'
+    config[camera_names[0]]['camerainfo_url'] = 'file://' + calibration_directory + '/' + camera_names[0] + '.yaml'
+    config[camera_names[1]]['camerainfo_url'] = 'file://' + calibration_directory + '/' + camera_names[1] + '.yaml'
 
     # Create the composabel node container for the synchronized camera driver
     container = ComposableNodeContainer(
