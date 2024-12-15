@@ -12,6 +12,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QTimer>
 #include <thread>
 #include <filesystem>
 
@@ -48,8 +49,12 @@ private:
     QLabel *zed_left_label_;
     QLabel *zed_right_label_;
 
+    QTimer *timer_;
+    bool recording_ = false;
+
 private slots:
     void handle_button_click();
+    void handle_record_button_click();
 
 signals:
     void newDirectorMessage(QString msg);

@@ -82,6 +82,11 @@ DirectorGui::DirectorGui(int argc, char **argv)
     left_layout->addWidget(button);
     connect(button, &QPushButton::clicked, this, &DirectorGui::handle_button_click);
 
+    // Add record button to the left layout
+    auto record_button_ = new QPushButton("Record Video", this);
+    left_layout->addWidget(record_button_);
+    connect(record_button_, &QPushButton::clicked, this, &DirectorGui::handle_record_button_click);
+
     // Add log area to the left layout
     log_area_ = new QTextEdit(this);
     log_area_->setReadOnly(true);
@@ -116,18 +121,6 @@ DirectorGui::DirectorGui(int argc, char **argv)
     right_layout->addWidget(ximea_label_, 1, 0, 1, 2);
     right_layout->addWidget(zed_left_label_, 2, 0);
     right_layout->addWidget(zed_right_label_, 2, 1);
-
-    // firefly_left_label_->setFixedSize(1080, 1080);
-    // firefly_right_label_->setFixedSize(1080, 1080);
-    // ximea_label_->setFixedSize(2048, 1088);
-    // zed_left_label_->setFixedSize(1080, 1080);
-    // zed_right_label_->setFixedSize(1080, 1080);
-
-    // firefly_left_label_->setMaximumSize(500, 500);
-    // firefly_right_label_->setMaximumSize(500, 500);
-    // ximea_label_->setMaximumSize(800, 400);
-    // zed_left_label_->setMaximumSize(500, 500);
-    // zed_right_label_->setMaximumSize(500, 500);
 
     // Add the right layout to the main layout with 3/4 stretch
     main_layout->addLayout(right_layout, 3); // Stretch factor = 3
@@ -170,6 +163,31 @@ void DirectorGui::handle_button_click()
 
     status_label_->setText(QString("Triggered: %1").arg(QString::fromStdString(message.data)));
     RCLCPP_INFO(this->get_logger(), "Published: %s", message.data.c_str());
+}
+
+void DirectorGui::handle_record_button_click()
+{
+    if (recording_)
+    {
+        timer_->stop();
+        recording_ = false;
+        status_label_->setText("Recording stopped");
+    }
+    else
+    {
+        timer_ = new QTimer(this);
+        connect(timer_, &QTimer::timeout, this, [this]()
+                {
+                    auto message = std_msgs::msg::String();
+                    message.data = "capture " + std::to_string(image_count_++);
+                    publisher_->publish(message);
+
+                    status_label_->setText(QString("Recording: %1").arg(QString::fromStdString(message.data)));
+                    RCLCPP_INFO(this->get_logger(), "Published: %s", message.data.c_str()); });
+        timer_->start(1000); // 1 second interval
+        recording_ = true;
+        status_label_->setText("Recording started");
+    }
 }
 
 void DirectorGui::director_callback(const std_msgs::msg::String::SharedPtr msg)
@@ -225,11 +243,11 @@ int main(int argc, char **argv)
     gui->show();
 
     // Start ROS spinning in another thread
-    std::thread spin_thread([gui]() {
+    std::thread spin_thread([gui]()
+                            {
         rclcpp::spin(gui);
         // Once spin() returns (due to shutdown), we instruct Qt to quit
-        QMetaObject::invokeMethod(QApplication::instance(), "quit", Qt::QueuedConnection);
-    });
+        QMetaObject::invokeMethod(QApplication::instance(), "quit", Qt::QueuedConnection); });
 
     // Run the Qt event loop
     int ret = app.exec();
