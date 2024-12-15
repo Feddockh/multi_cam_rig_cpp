@@ -31,6 +31,11 @@
     <exec_depend>CUDA</exec_depend>
     <exec_depend>Qt5Widgets</exec_depend>
 
+    <exec_depend>python3</exec_depend>
+    <exec_depend>cv_bridge</exec_depend>
+    <exec_depend>opencv-python</exec_depend>
+    <exec_depend>numpy</exec_depend>
+
     <export>
         <build_type>ament_cmake</build_type>
     </export>

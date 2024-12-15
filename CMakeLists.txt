@@ -17,6 +17,8 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 
 # Find Ximea SDK
 find_path(XIMEA_INCLUDE_DIR
@@ -110,5 +112,11 @@ install(DIRECTORY
     calibration
     DESTINATION share/${PROJECT_NAME}
 )
+
+# Install the scripts
+# install(
+#   PROGRAMS scripts/camera_calibration.py
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 ament_package()

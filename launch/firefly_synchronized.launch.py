@@ -33,8 +33,8 @@ def launch_setup(context, *args, **kwargs):
     serial_numbers = [config[camera_name]['serial_number'] for camera_name in camera_names]
 
     # Replace placeholders for the calibration files
-    config[camera_names[0]]['camerainfo_url'] = calibration_directory + '/' + serial_numbers[0] + '.yaml'
-    config[camera_names[1]]['camerainfo_url'] = calibration_directory + '/' + serial_numbers[1] + '.yaml'
+    config[camera_names[0]]['camerainfo_url'] = 'file://' + calibration_directory + '/' + serial_numbers[0] + '.yaml'
+    config[camera_names[1]]['camerainfo_url'] = 'file://' + calibration_directory + '/' + serial_numbers[1] + '.yaml'
 
     # Create the composabel node container for the synchronized camera driver
     container = ComposableNodeContainer(

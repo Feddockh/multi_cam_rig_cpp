@@ -14,6 +14,7 @@ def generate_launch_description():
     ximea_image_topic = '/multi_cam_rig/ximea/image'
     zed_left_image_topic = '/multi_cam_rig/zed/left_image'
     zed_right_image_topic = '/multi_cam_rig/zed/right_image'
+    zed_imu_topic = '/multi_cam_rig/zed/imu'
 
     # Set to True to save images to disk
     save_images = False
@@ -47,6 +48,7 @@ def generate_launch_description():
             'ximea_image_topic': ximea_image_topic,
             'zed_left_image_topic': zed_left_image_topic,
             'zed_right_image_topic': zed_right_image_topic,
+            'zed_imu_topic': zed_imu_topic,
         }]
     )
 
@@ -91,6 +93,7 @@ def generate_launch_description():
             'director_topic': director_topic,
             'left_image_topic': zed_left_image_topic,
             'right_image_topic': zed_right_image_topic,
+            'imu_topic': zed_imu_topic
         }]
     )
 

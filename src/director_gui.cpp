@@ -12,6 +12,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     declare_parameter("ximea_image_topic", "/multi_cam_rig/ximea/image");
     declare_parameter("zed_left_image_topic", "/multi_cam_rig/zed/left_image");
     declare_parameter("zed_right_image_topic", "/multi_cam_rig/zed/right_image");
+    declare_parameter("zed_imu_topic", "/multi_cam_rig/zed/imu");
 
     save_images_ = get_parameter("save_images").as_bool();
     save_dir_ = get_parameter("save_dir").as_string();
@@ -21,6 +22,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     std::string ximea_topic = get_parameter("ximea_image_topic").as_string();
     std::string zed_left_topic = get_parameter("zed_left_image_topic").as_string();
     std::string zed_right_topic = get_parameter("zed_right_image_topic").as_string();
+    std::string zed_imu_topic = get_parameter("zed_imu_topic").as_string();
 
     // Create the save directory if it doesn't exist
     if (save_images_)
@@ -53,6 +55,11 @@ DirectorGui::DirectorGui(int argc, char **argv)
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
         zed_right_topic, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, zed_right_label_); }));
+
+    // Subscribe to IMU topic
+    imu_subscriber_ = create_subscription<sensor_msgs::msg::Imu>(
+        zed_imu_topic, 10, [this](const sensor_msgs::msg::Imu::SharedPtr msg)
+        { RCLCPP_INFO(this->get_logger(), "Received IMU data."); });
 
     // Qt GUI setup
     setWindowTitle("Director GUI with Multiple Image Displays");

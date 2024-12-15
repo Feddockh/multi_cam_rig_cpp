@@ -9,18 +9,21 @@ ZedCaptureNode::ZedCaptureNode()
     declare_parameter("director_topic", "/multi_cam_rig/director");
     declare_parameter("left_image_topic", "/multi_cam_rig/zed/left_image");
     declare_parameter("right_image_topic", "/multi_cam_rig/zed/right_image");
+    declare_parameter("imu_topic", "/multi_cam_rig/zed/imu");
 
     save_images_ = get_parameter("save_images").as_bool();
     save_dir_ = get_parameter("save_dir").as_string();
     std::string director_topic = get_parameter("director_topic").as_string();
     std::string left_image_topic = get_parameter("left_image_topic").as_string();
     std::string right_image_topic = get_parameter("right_image_topic").as_string();
+    std::string imu_topic = get_parameter("imu_topic").as_string();
 
     director_publisher_ = create_publisher<std_msgs::msg::String>(director_topic, 10);
     director_subscriber_ = create_subscription<std_msgs::msg::String>(
         director_topic, 10, std::bind(&ZedCaptureNode::director_callback, this, std::placeholders::_1));
     left_image_publisher_ = create_publisher<sensor_msgs::msg::Image>(left_image_topic, 10);
     right_image_publisher_ = create_publisher<sensor_msgs::msg::Image>(right_image_topic, 10);
+    imu_publisher_ = create_publisher<sensor_msgs::msg::Imu>(imu_topic, 10);
 
     // Initialize the camera
     camera_initialized_ = initialize_camera();
@@ -74,6 +77,7 @@ void ZedCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr ms
         if (camera_initialized_)
         {
             capture_image();
+            capture_imu_data();
         }
         else
         {
@@ -131,6 +135,46 @@ void ZedCaptureNode::capture_image()
     }
 }
 
+void ZedCaptureNode::capture_imu_data()
+{
+    if (zed_.getSensorsData(sensors_data_, sl::TIME_REFERENCE::CURRENT) == sl::ERROR_CODE::SUCCESS)
+    {
+        auto imu_msg = sensor_msgs::msg::Imu();
+        imu_msg.header.stamp = this->get_clock()->now();
+        imu_msg.header.frame_id = "zed_imu";
+
+        // Fill orientation data
+        imu_msg.orientation.x = sensors_data_.imu.pose.getOrientation().x;
+        imu_msg.orientation.y = sensors_data_.imu.pose.getOrientation().y;
+        imu_msg.orientation.z = sensors_data_.imu.pose.getOrientation().z;
+        imu_msg.orientation.w = sensors_data_.imu.pose.getOrientation().w;
+
+        // Fill angular velocity data
+        imu_msg.angular_velocity.x = sensors_data_.imu.angular_velocity.x;
+        imu_msg.angular_velocity.y = sensors_data_.imu.angular_velocity.y;
+        imu_msg.angular_velocity.z = sensors_data_.imu.angular_velocity.z;
+
+        // Fill linear acceleration data
+        imu_msg.linear_acceleration.x = sensors_data_.imu.linear_acceleration.x;
+        imu_msg.linear_acceleration.y = sensors_data_.imu.linear_acceleration.y;
+        imu_msg.linear_acceleration.z = sensors_data_.imu.linear_acceleration.z;
+
+        // Publish the IMU data
+        imu_publisher_->publish(imu_msg);
+        RCLCPP_INFO(this->get_logger(), "Published IMU data.");
+
+        // Save IMU data if required
+        if (save_images_)
+        {
+            save_imu_data();
+        }
+    }
+    else
+    {
+        RCLCPP_WARN(this->get_logger(), "Failed to retrieve IMU data from ZED.");
+    }
+}
+
 void ZedCaptureNode::save_images()
 {
     if (!std::filesystem::exists(save_dir_))
@@ -144,6 +188,30 @@ void ZedCaptureNode::save_images()
     else
     {
         RCLCPP_WARN(this->get_logger(), "Save directory does not exist: %s", save_dir_.c_str());
+    }
+}
+
+void ZedCaptureNode::save_imu_data()
+{
+    if (!std::filesystem::exists(save_dir_))
+    {
+        std::filesystem::create_directories(save_dir_);
+    }
+
+    std::string imu_data_path = save_dir_ + "/imu_data_" + std::to_string(image_id_) + ".txt";
+    std::ofstream imu_file(imu_data_path);
+
+    if (imu_file.is_open())
+    {
+        imu_file << "Orientation: " << sensors_data_.imu.pose.getOrientation() << std::endl;
+        imu_file << "Angular Velocity: " << sensors_data_.imu.angular_velocity << std::endl;
+        imu_file << "Linear Acceleration: " << sensors_data_.imu.linear_acceleration << std::endl;
+        imu_file.close();
+        RCLCPP_INFO(this->get_logger(), "Saved IMU data.");
+    }
+    else
+    {
+        RCLCPP_WARN(this->get_logger(), "Failed to save IMU data to file.");
     }
 }
 
