@@ -177,10 +177,10 @@ void ZedCaptureNode::capture_imu_data()
 
 void ZedCaptureNode::save_images()
 {
-    if (!std::filesystem::exists(save_dir_))
+    if (std::filesystem::exists(save_dir_))
     {
-        std::string left_image_path = save_dir_ + "/zed_left_" + std::to_string(image_id_) + ".jpg";
-        std::string right_image_path = save_dir_ + "/zed_right_" + std::to_string(image_id_) + ".jpg";
+        std::string left_image_path = save_dir_ + "/zed_left_image_" + std::to_string(image_id_) + ".jpg";
+        std::string right_image_path = save_dir_ + "/zed_right_image_" + std::to_string(image_id_) + ".jpg";
         cv::imwrite(left_image_path, left_image_);
         cv::imwrite(right_image_path, right_image_);
         RCLCPP_INFO(this->get_logger(), "Saved ZED images.");

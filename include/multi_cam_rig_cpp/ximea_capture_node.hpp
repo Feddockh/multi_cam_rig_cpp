@@ -42,7 +42,7 @@ private:
     bool camera_initialized_;
 
     // Camera Parameters
-    int exposure_time_ = 10000; // in microseconds
+    int exposure_time_ = 100000; // in microseconds
 
     // Image storage
     cv::Mat image_;

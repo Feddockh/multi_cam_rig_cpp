@@ -113,7 +113,7 @@ void FireflyCaptureNode::check_and_publish_completion()
 
 void FireflyCaptureNode::save_images()
 {
-    if (!std::filesystem::exists(save_dir_))
+    if (std::filesystem::exists(save_dir_))
     {
         std::string left_image_path = save_dir_ + "/firefly_left_image_" + std::to_string(image_id_) + ".jpg";
         std::string right_image_path = save_dir_ + "/firefly_right_image_" + std::to_string(image_id_) + ".jpg";

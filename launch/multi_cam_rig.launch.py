@@ -3,7 +3,12 @@
 import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from ament_index_python.packages import get_package_share_directory
+from launch.actions import ExecuteProcess
 import datetime
+
 
 def generate_launch_description():
 
@@ -16,10 +21,13 @@ def generate_launch_description():
     zed_right_image_topic = '/multi_cam_rig/zed/right_image'
     zed_imu_topic = '/multi_cam_rig/zed/imu'
 
-    # Set to True to save images to disk
+    # Save options
     save_images = False
+    rosbag_record = False
     save_dir = ''
-    if save_images:
+
+    # Set to True to save images to disk
+    if save_images or rosbag_record:
 
         # Create the data directory
         workspace_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -31,7 +39,24 @@ def generate_launch_description():
         save_dir_name = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         save_dir = os.path.join(data_dir, save_dir_name)
         print(f'Saving images to: {save_dir}')
-        os.makedirs(save_dir, exist_ok=True)
+        # os.makedirs(save_dir, exist_ok=True)
+
+    # Enable rosbag recording
+    if rosbag_record:
+        rosbag_process = ExecuteProcess(
+            cmd=[
+                'ros2', 'bag', 'record',
+                '-o', save_dir,
+                director_topic,
+                firefly_left_image_topic,
+                firefly_right_image_topic,
+                ximea_image_topic,
+                zed_left_image_topic,
+                zed_right_image_topic,
+                zed_imu_topic
+            ],
+            output='screen'
+        )
 
     # Create the director gui node
     director_gui_node = Node(
@@ -50,6 +75,12 @@ def generate_launch_description():
             'zed_right_image_topic': zed_right_image_topic,
             'zed_imu_topic': zed_imu_topic,
         }]
+    )
+
+    # Include the firefly_synchronized launch file
+    firefly_synchronized_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(
+            get_package_share_directory('multi_cam_rig_cpp'), 'launch', 'firefly_synchronized.launch.py'))
     )
 
     # Create the firefly capture node
@@ -97,9 +128,15 @@ def generate_launch_description():
         }]
     )
 
-    return LaunchDescription([
+    launch_description = LaunchDescription([
         director_gui_node,
+        firefly_synchronized_launch,
         firefly_capture_node,
         ximea_capture_node,
         zed_capture_node
     ])
+
+    if rosbag_record:
+        launch_description.add_action(rosbag_process)
+
+    return launch_description

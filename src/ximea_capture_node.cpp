@@ -176,7 +176,7 @@ void XimeaCaptureNode::capture_image()
 
 void XimeaCaptureNode::save_image()
 {
-    if (!std::filesystem::exists(save_dir_))
+    if (std::filesystem::exists(save_dir_))
     {
         std::string image_path = save_dir_ + "/ximea_image_" + std::to_string(image_id_) + ".jpg";
         cv::imwrite(image_path, image_);

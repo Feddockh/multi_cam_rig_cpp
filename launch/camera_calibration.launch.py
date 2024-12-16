@@ -19,8 +19,8 @@ def generate_launch_description():
                 "--approximate", "0.1"  # Allow 100ms slop for approximate synchronization
             ],
             remappings=[
-                ("left", "/flir_node/firefly_left/image_raw"),  # Remap left image topic
-                ("right", "/flir_node/firefly_right/image_raw")  # Remap right image topic
+                ("left", "/multi_cam_rig/zed/left_image"),  # Remap left image topic
+                ("right", "/multi_cam_rig/ximea/image")  # Remap right image topic
             ],
             output="screen",
         ),
