@@ -78,10 +78,10 @@ def generate_launch_description():
     )
 
     # Include the firefly_synchronized launch file
-    firefly_synchronized_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('multi_cam_rig_cpp'), 'launch', 'firefly_synchronized.launch.py'))
-    )
+    # firefly_synchronized_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(os.path.join(
+    #         get_package_share_directory('multi_cam_rig_cpp'), 'launch', 'firefly_synchronized.launch.py'))
+    # )
 
     # Create the firefly capture node
     firefly_capture_node = Node(
@@ -130,7 +130,7 @@ def generate_launch_description():
 
     launch_description = LaunchDescription([
         director_gui_node,
-        firefly_synchronized_launch,
+        # firefly_synchronized_launch,
         firefly_capture_node,
         ximea_capture_node,
         zed_capture_node

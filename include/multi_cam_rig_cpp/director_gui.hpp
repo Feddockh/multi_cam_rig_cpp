@@ -37,7 +37,7 @@ private:
     bool save_images_;
     std::string save_dir_;
 
-    static constexpr int WINDOW_HEIGHT = 800;
+    static constexpr int WINDOW_HEIGHT = 700;
     static constexpr int WINDOW_WIDTH = 1200;
 
     QLabel *status_label_;
