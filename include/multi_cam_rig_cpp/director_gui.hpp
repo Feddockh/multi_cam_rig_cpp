@@ -13,6 +13,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QTimer>
+#include <QCloseEvent>
 #include <thread>
 #include <filesystem>
 
@@ -22,6 +23,9 @@ class DirectorGui : public QWidget, public rclcpp::Node
 
 public:
     DirectorGui(int argc, char **argv);
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     void director_callback(const std_msgs::msg::String::SharedPtr msg);

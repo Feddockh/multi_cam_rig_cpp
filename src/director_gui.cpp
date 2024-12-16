@@ -234,6 +234,23 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
     }
 }
 
+void DirectorGui::closeEvent(QCloseEvent *event)
+{
+    RCLCPP_INFO(this->get_logger(), "GUI window is closing. Initiating shutdown.");
+
+    // Stop recording if running
+    if (recording_)
+    {
+        timer_->stop();
+    }
+
+    // Shutdown ROS 2 node
+    rclcpp::shutdown();
+
+    // Close the GUI
+    event->accept();
+}
+
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);

@@ -3,10 +3,11 @@
 import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import ExecuteProcess
+from launch.event_handlers import OnProcessExit
 import datetime
 
 
@@ -78,10 +79,10 @@ def generate_launch_description():
     )
 
     # Include the firefly_synchronized launch file
-    # firefly_synchronized_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(os.path.join(
-    #         get_package_share_directory('multi_cam_rig_cpp'), 'launch', 'firefly_synchronized.launch.py'))
-    # )
+    firefly_synchronized_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(
+            get_package_share_directory('multi_cam_rig_cpp'), 'launch', 'firefly_synchronized.launch.py'))
+    )
 
     # Create the firefly capture node
     firefly_capture_node = Node(
@@ -128,12 +129,21 @@ def generate_launch_description():
         }]
     )
 
+    # Event handler to shutdown everything when director_gui_node exits
+    exit_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=director_gui_node,
+            on_exit=[Shutdown()]  # Shut down all actions in this launch description
+        )
+    )
+
     launch_description = LaunchDescription([
         director_gui_node,
-        # firefly_synchronized_launch,
+        firefly_synchronized_launch,
         firefly_capture_node,
         ximea_capture_node,
-        zed_capture_node
+        zed_capture_node,
+        exit_handler
     ])
 
     if rosbag_record:
