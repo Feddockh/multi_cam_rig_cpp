@@ -21,7 +21,6 @@ private:
     void left_image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
     void right_image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
     void check_and_publish_completion();
-    void save_images();
 
     // ROS 2 components
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr director_publisher_;
@@ -29,8 +28,6 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr left_image_subscriber_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr right_image_subscriber_;
 
-    bool save_images_;
-    std::string save_dir_;
     int image_id_;
 
     // Serial communication

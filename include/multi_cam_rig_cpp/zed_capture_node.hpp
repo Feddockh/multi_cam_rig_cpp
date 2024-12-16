@@ -21,8 +21,6 @@ private:
     bool initialize_camera();
     void capture_image();
     void capture_imu_data();
-    void save_images();
-    void save_imu_data();
 
     // ROS 2 components
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr director_publisher_;
@@ -31,8 +29,6 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr right_image_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
 
-    bool save_images_;
-    std::string save_dir_;
     int image_id_;
 
     sl::Camera zed_;

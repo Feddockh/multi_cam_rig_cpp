@@ -23,24 +23,20 @@ def generate_launch_description():
     zed_imu_topic = '/multi_cam_rig/zed/imu'
 
     # Save options
-    save_images = False
     rosbag_record = False
+    data_dir = '~/data/rivendale'
     save_dir = ''
 
     # Set to True to save images to disk
-    if save_images or rosbag_record:
+    if rosbag_record:
 
-        # Create the data directory
-        workspace_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-        print(f'Workspace directory: {workspace_dir}')
-        data_dir = os.path.join(workspace_dir, 'multi_cam_rig_cpp', 'data')
+        # Create the data directory if it doean't exist
         os.makedirs(data_dir, exist_ok=True)
         
         # Create the save directory with the current date
         save_dir_name = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         save_dir = os.path.join(data_dir, save_dir_name)
         print(f'Saving images to: {save_dir}')
-        # os.makedirs(save_dir, exist_ok=True)
 
     # Enable rosbag recording
     if rosbag_record:
@@ -66,8 +62,6 @@ def generate_launch_description():
         name='director_gui',
         output='screen',
         parameters=[{
-            'save_images': save_images,
-            'save_dir': save_dir,
             'director_topic': director_topic,
             'firefly_left_image_topic': firefly_left_image_topic,
             'firefly_right_image_topic': firefly_right_image_topic,
@@ -91,8 +85,6 @@ def generate_launch_description():
         name='firefly_capture_node',
         output='screen',
         parameters=[{
-            'save_images': save_images,
-            'save_dir': save_dir,
             'director_topic': director_topic,
             'left_image_topic': firefly_left_image_topic,
             'right_image_topic': firefly_right_image_topic,
@@ -106,8 +98,6 @@ def generate_launch_description():
         name='ximea_capture_node',
         output='screen',
         parameters=[{
-            'save_images': save_images,
-            'save_dir': save_dir,
             'director_topic': director_topic,
             'ximea_image_topic': ximea_image_topic,
         }]
@@ -120,8 +110,6 @@ def generate_launch_description():
         name='zed_capture_node',
         output='screen',
         parameters=[{
-            'save_images': save_images,
-            'save_dir': save_dir,
             'director_topic': director_topic,
             'left_image_topic': zed_left_image_topic,
             'right_image_topic': zed_right_image_topic,

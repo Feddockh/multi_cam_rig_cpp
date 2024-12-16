@@ -38,8 +38,6 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscriber_;
 
     int image_count_;
-    bool save_images_;
-    std::string save_dir_;
 
     static constexpr int WINDOW_HEIGHT = 700;
     static constexpr int WINDOW_WIDTH = 1200;

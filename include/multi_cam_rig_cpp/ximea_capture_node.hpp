@@ -26,15 +26,12 @@ private:
     void director_callback(const std_msgs::msg::String::SharedPtr msg);
     bool initialize_camera();
     void capture_image();
-    void save_image();
 
     // ROS 2 components
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr director_publisher_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr director_subscriber_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_publisher_;
 
-    bool save_images_;
-    std::string save_dir_;
     int image_id_;
 
     // XIMEA Camera Handle
@@ -42,7 +39,7 @@ private:
     bool camera_initialized_;
 
     // Camera Parameters
-    int exposure_time_ = 100000; // in microseconds
+    int exposure_time_ = 1000; // in microseconds
 
     // Image storage
     cv::Mat image_;

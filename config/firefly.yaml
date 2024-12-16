@@ -25,7 +25,7 @@ firefly_left:
   acquisition_mode: 'SingleFrame'
   exposure_mode: 'Timed'
   exposure_auto: 'Off'
-  exposure_time: 10000.0
+  exposure_time: 1000.0
   acquisition_frame_rate_enable: true
   trigger_mode: 'On'
   trigger_selector: 'FrameStart'
@@ -77,7 +77,7 @@ firefly_right:
   acquisition_mode: 'SingleFrame'
   exposure_mode: 'Timed'
   exposure_auto: 'Off'
-  exposure_time: 10000.0
+  exposure_time: 1000.0
   acquisition_frame_rate_enable: true
   trigger_mode: 'On'
   trigger_selector: 'FrameStart'
