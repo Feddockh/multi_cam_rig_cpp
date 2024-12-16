@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+    <name>multi_cam_rig_cpp</name>
+    <version>0.1.0</version>
+    <description>Multi-camera rig in C++ with a GUI trigger</description>
+    <maintainer email="hayden4feddock@gmail.com">Hayden Feddock</maintainer>
+    <license>Apache-2.0</license>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+
+    <build_depend>rclcpp</build_depend>
+    <build_depend>rclcpp_components</build_depend>
+    <build_depend>std_msgs</build_depend>
+    <build_depend>Qt5Core</build_depend>
+    <build_depend>sensor_msgs</build_depend>
+    <build_depend>serial_driver</build_depend>
+    <build_depend>cv_bridge</build_depend>
+    <build_depend>OpenCV</build_depend>
+    <build_depend>CUDA</build_depend>
+    <build_depend>Qt5Widgets</build_depend>
+
+    <exec_depend>rclcpp</exec_depend>
+    <exec_depend>rclcpp_components</exec_depend>
+    <exec_depend>std_msgs</exec_depend>
+    <exec_depend>Qt5Core</exec_depend>
+    <exec_depend>sensor_msgs</exec_depend>
+    <exec_depend>serial_driver</exec_depend>
+    <exec_depend>cv_bridge</exec_depend>
+    <exec_depend>OpenCV</exec_depend>
+    <exec_depend>CUDA</exec_depend>
+    <exec_depend>Qt5Widgets</exec_depend>
+
+    <exec_depend>python3</exec_depend>
+    <exec_depend>cv_bridge</exec_depend>
+    <exec_depend>opencv-python</exec_depend>
+    <exec_depend>numpy</exec_depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>

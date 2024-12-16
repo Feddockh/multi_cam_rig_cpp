@@ -49,7 +49,13 @@ DirectorGui::DirectorGui(int argc, char **argv)
 
     // Qt GUI setup
     setWindowTitle("Director GUI with Multiple Image Displays");
-    resize(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    // Get the screen dimensions
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QRect screenGeometry = screen->geometry();
+    window_width = screenGeometry.width();
+    window_height = screenGeometry.height();
+    resize(window_width, window_height);
 
     // Main layout: Horizontal layout for left and right sections
     auto main_layout = new QHBoxLayout(this);
@@ -193,8 +199,8 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
         double aspect_ratio = static_cast<double>(cv_ptr->image.cols) / cv_ptr->image.rows;
 
         // Calculate label size based on window dimensions
-        int max_width = (WINDOW_WIDTH * 3 / 4);
-        int max_height = WINDOW_HEIGHT / 3;
+        int max_width = (window_width * 3 / 4);
+        int max_height = window_height / 3;
         if (label != ximea_label_)
         {
             max_width = max_width / 2;

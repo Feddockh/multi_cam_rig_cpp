@@ -16,6 +16,8 @@
 #include <QCloseEvent>
 #include <thread>
 #include <filesystem>
+#include <QScreen>
+#include <QGuiApplication>
 
 class DirectorGui : public QWidget, public rclcpp::Node
 {
@@ -39,8 +41,8 @@ private:
 
     int image_count_;
 
-    static constexpr int WINDOW_HEIGHT = 700;
-    static constexpr int WINDOW_WIDTH = 1200;
+    int window_height;
+    int window_width;
 
     QLabel *status_label_;
     QTextEdit *log_area_;

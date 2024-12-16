@@ -1,0 +1,1 @@
+rclcpp;rclcpp_components;std_msgs;Qt5Core;sensor_msgs;serial_driver;cv_bridge;OpenCV;CUDA;Qt5Widgets;python3;opencv-python;numpy
