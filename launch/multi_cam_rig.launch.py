@@ -23,37 +23,36 @@ def generate_launch_description():
     zed_imu_topic = '/multi_cam_rig/zed/imu'
 
     # Save options
-    rosbag_record = False
     data_dir = '~/data/rivendale'
-    save_dir = ''
+    # save_dir = ''
 
-    # Set to True to save images to disk
-    if rosbag_record:
+    # # Set to True to save images to disk
+    # if rosbag_record:
 
-        # Create the data directory if it doean't exist
-        os.makedirs(data_dir, exist_ok=True)
+    #     # Create the data directory if it doean't exist
+    #     os.makedirs(data_dir, exist_ok=True)
         
-        # Create the save directory with the current date
-        save_dir_name = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        save_dir = os.path.join(data_dir, save_dir_name)
-        print(f'Saving images to: {save_dir}')
+    #     # Create the save directory with the current date
+    #     save_dir_name = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    #     save_dir = os.path.join(data_dir, save_dir_name)
+    #     print(f'Saving images to: {save_dir}')
 
-    # Enable rosbag recording
-    if rosbag_record:
-        rosbag_process = ExecuteProcess(
-            cmd=[
-                'ros2', 'bag', 'record',
-                '-o', save_dir,
-                director_topic,
-                firefly_left_image_topic,
-                firefly_right_image_topic,
-                ximea_image_topic,
-                zed_left_image_topic,
-                zed_right_image_topic,
-                zed_imu_topic
-            ],
-            output='screen'
-        )
+    # # Enable rosbag recording
+    # if rosbag_record:
+    #     rosbag_process = ExecuteProcess(
+    #         cmd=[
+    #             'ros2', 'bag', 'record',
+    #             '-o', save_dir,
+    #             director_topic,
+    #             firefly_left_image_topic,
+    #             firefly_right_image_topic,
+    #             ximea_image_topic,
+    #             zed_left_image_topic,
+    #             zed_right_image_topic,
+    #             zed_imu_topic
+    #         ],
+    #         output='screen'
+    #     )
 
     # Create the director gui node
     director_gui_node = Node(
@@ -62,6 +61,7 @@ def generate_launch_description():
         name='director_gui',
         output='screen',
         parameters=[{
+            'data_dir': data_dir,
             'director_topic': director_topic,
             'firefly_left_image_topic': firefly_left_image_topic,
             'firefly_right_image_topic': firefly_right_image_topic,
@@ -134,7 +134,7 @@ def generate_launch_description():
         exit_handler
     ])
 
-    if rosbag_record:
-        launch_description.add_action(rosbag_process)
+    # if rosbag_record:
+    #     launch_description.add_action(rosbag_process)
 
     return launch_description

@@ -4,6 +4,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     : QWidget(), rclcpp::Node("director_gui"), image_count_(1)
 {
     // Declare and get parameters
+    declare_parameter("data_dir", "~/tmp");
     declare_parameter("director_topic", "/multi_cam_rig/director");
     declare_parameter("firefly_left_image_topic", "/flir_node/firefly_left/image_raw");
     declare_parameter("firefly_right_image_topic", "/flir_node/firefly_right/image_raw");
@@ -12,39 +13,40 @@ DirectorGui::DirectorGui(int argc, char **argv)
     declare_parameter("zed_right_image_topic", "/multi_cam_rig/zed/right_image");
     declare_parameter("zed_imu_topic", "/multi_cam_rig/zed/imu");
 
-    std::string director_topic = get_parameter("director_topic").as_string();
-    std::string firefly_left_topic = get_parameter("firefly_left_image_topic").as_string();
-    std::string firefly_right_topic = get_parameter("firefly_right_image_topic").as_string();
-    std::string ximea_topic = get_parameter("ximea_image_topic").as_string();
-    std::string zed_left_topic = get_parameter("zed_left_image_topic").as_string();
-    std::string zed_right_topic = get_parameter("zed_right_image_topic").as_string();
-    std::string zed_imu_topic = get_parameter("zed_imu_topic").as_string();
+    data_dir_ = get_parameter("data_dir").as_string();
+    director_topic_ = get_parameter("director_topic").as_string();
+    firefly_left_topic_ = get_parameter("firefly_left_image_topic").as_string();
+    firefly_right_topic_ = get_parameter("firefly_right_image_topic").as_string();
+    ximea_topic_ = get_parameter("ximea_image_topic").as_string();
+    zed_left_topic_ = get_parameter("zed_left_image_topic").as_string();
+    zed_right_topic_ = get_parameter("zed_right_image_topic").as_string();
+    zed_imu_topic_ = get_parameter("zed_imu_topic").as_string();
 
     // Set up director's publisher and subscriber
-    publisher_ = create_publisher<std_msgs::msg::String>(director_topic, 10);
+    publisher_ = create_publisher<std_msgs::msg::String>(director_topic_, 10);
     subscriber_ = create_subscription<std_msgs::msg::String>(
-        director_topic, 10, std::bind(&DirectorGui::director_callback, this, std::placeholders::_1));
+        director_topic_, 10, std::bind(&DirectorGui::director_callback, this, std::placeholders::_1));
 
     // Subscribe to image topics
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        firefly_left_topic, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+        firefly_left_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, firefly_left_label_); }));
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        firefly_right_topic, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+        firefly_right_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, firefly_right_label_); }));
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        ximea_topic, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+        ximea_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, ximea_label_); }));
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        zed_left_topic, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+        zed_left_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, zed_left_label_); }));
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        zed_right_topic, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+        zed_right_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, zed_right_label_); }));
 
     // Subscribe to IMU topic
     imu_subscriber_ = create_subscription<sensor_msgs::msg::Imu>(
-        zed_imu_topic, 10, [this](const sensor_msgs::msg::Imu::SharedPtr msg)
+        zed_imu_topic_, 10, [this](const sensor_msgs::msg::Imu::SharedPtr msg)
         { RCLCPP_INFO(this->get_logger(), "Received IMU data."); });
 
     // Qt GUI setup
@@ -53,9 +55,9 @@ DirectorGui::DirectorGui(int argc, char **argv)
     // Get the screen dimensions
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect screenGeometry = screen->geometry();
-    window_width = screenGeometry.width();
-    window_height = screenGeometry.height();
-    resize(window_width, window_height);
+    window_width_ = screenGeometry.width();
+    window_height_ = screenGeometry.height();
+    resize(window_width_, window_height_);
 
     // Main layout: Horizontal layout for left and right sections
     auto main_layout = new QHBoxLayout(this);
@@ -78,6 +80,11 @@ DirectorGui::DirectorGui(int argc, char **argv)
     auto record_button_ = new QPushButton("Record Video", this);
     left_layout->addWidget(record_button_);
     connect(record_button_, &QPushButton::clicked, this, &DirectorGui::handle_record_button_click);
+
+    // Add a button to start recording a rosbag
+    auto rosbag_button = new QPushButton("Start Rosbag", this);
+    left_layout->addWidget(rosbag_button);
+    connect(rosbag_button, &QPushButton::clicked, this, &DirectorGui::handle_rosbag_button_click);
 
     // Add log area to the left layout
     log_area_ = new QTextEdit(this);
@@ -163,7 +170,11 @@ void DirectorGui::handle_record_button_click()
     {
         timer_->stop();
         recording_ = false;
+        auto message = std_msgs::msg::String();
+        message.data = "Recording stopped";
+        publisher_->publish(message);
         status_label_->setText("Recording stopped");
+        RCLCPP_INFO(this->get_logger(), "Recording stopped");
     }
     else
     {
@@ -178,7 +189,67 @@ void DirectorGui::handle_record_button_click()
                     RCLCPP_INFO(this->get_logger(), "Published: %s", message.data.c_str()); });
         timer_->start(1000); // 1 second interval
         recording_ = true;
+
+        auto message = std_msgs::msg::String();
+        message.data = "Recording started";
+        publisher_->publish(message);
         status_label_->setText("Recording started");
+        RCLCPP_INFO(this->get_logger(), "Recording started");
+    }
+}
+
+void DirectorGui::handle_rosbag_button_click()
+{
+    if (rosbag_pid_ != -1)
+    {
+        kill(rosbag_pid_, SIGINT);
+        auto message = std_msgs::msg::String();
+        message.data = "Stopped recording rosbag with PID: " + std::to_string(rosbag_pid_);
+        publisher_->publish(message);
+        status_label_->setText("Stopped recording rosbag");
+        RCLCPP_INFO(this->get_logger(), "Stopped recording rosbag with PID: %d", rosbag_pid_);
+        rosbag_pid_ = -1;
+    }
+    else
+    {
+        // Get current date and time
+        auto now = std::chrono::system_clock::now();
+        auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+        // Create a directory with the current date and time
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S");
+        std::string dir_name = data_dir_ + "/rosbag_" + ss.str();
+        
+        // Start the rosbag recording (in the background)
+        std::string cmd = "ros2 bag record -o " + dir_name + " " 
+            + director_topic_ + " "
+            + firefly_left_topic_ + " " 
+            + firefly_right_topic_ + " " 
+            + ximea_topic_ + " " 
+            + zed_left_topic_ + " " 
+            + zed_right_topic_ + " " 
+            + zed_imu_topic_ + "> /dev/null 2>&1 & echo $!";
+
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (pipe)
+        {
+            char buffer[128];
+            std::string result = "";
+            while (!feof(pipe))
+            {
+                if (fgets(buffer, 128, pipe) != NULL)
+                    result += buffer;
+            }
+            pclose(pipe);
+            rosbag_pid_ = std::stoi(result);
+        }
+
+        auto message = std_msgs::msg::String();
+        message.data = "Started recording rosbag with PID: " + std::to_string(rosbag_pid_);
+        publisher_->publish(message);
+        status_label_->setText("Started recording rosbag");
+        RCLCPP_INFO(this->get_logger(), "Started recording rosbag with PID: %d", rosbag_pid_);
     }
 }
 
@@ -199,8 +270,8 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
         double aspect_ratio = static_cast<double>(cv_ptr->image.cols) / cv_ptr->image.rows;
 
         // Calculate label size based on window dimensions
-        int max_width = (window_width * 3 / 4);
-        int max_height = window_height / 3;
+        int max_width = (window_width_ * 3 / 4);
+        int max_height = window_height_ / 3;
         if (label != ximea_label_)
         {
             max_width = max_width / 2;

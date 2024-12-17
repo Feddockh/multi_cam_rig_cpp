@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <QScreen>
 #include <QGuiApplication>
+#include <chrono>
 
 class DirectorGui : public QWidget, public rclcpp::Node
 {
@@ -33,6 +34,14 @@ private:
     void director_callback(const std_msgs::msg::String::SharedPtr msg);
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg, QLabel *label);
 
+    std::string director_topic_;
+    std::string firefly_left_topic_;
+    std::string firefly_right_topic_;
+    std::string ximea_topic_;
+    std::string zed_left_topic_;
+    std::string zed_right_topic_;
+    std::string zed_imu_topic_;
+
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscriber_;
     std::vector<rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr> image_subscribers_;
@@ -40,9 +49,11 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscriber_;
 
     int image_count_;
+    std::string data_dir_;
+    int rosbag_pid_ = -1;
 
-    int window_height;
-    int window_width;
+    int window_height_;
+    int window_width_;
 
     QLabel *status_label_;
     QTextEdit *log_area_;
@@ -59,6 +70,7 @@ private:
 private slots:
     void handle_button_click();
     void handle_record_button_click();
+    void handle_rosbag_button_click();
 
 signals:
     void newDirectorMessage(QString msg);
