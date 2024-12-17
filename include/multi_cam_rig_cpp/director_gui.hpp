@@ -55,6 +55,10 @@ private:
     int window_height_;
     int window_width_;
 
+    QPushButton *capture_button_;
+    QPushButton *record_button_;
+    QPushButton *rosbag_button_;
+
     QLabel *status_label_;
     QTextEdit *log_area_;
 
@@ -68,7 +72,7 @@ private:
     bool recording_ = false;
 
 private slots:
-    void handle_button_click();
+    void handle_capture_button_click();
     void handle_record_button_click();
     void handle_rosbag_button_click();
 

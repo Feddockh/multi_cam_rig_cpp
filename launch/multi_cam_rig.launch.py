@@ -23,7 +23,7 @@ def generate_launch_description():
     zed_imu_topic = '/multi_cam_rig/zed/imu'
 
     # Save options
-    data_dir = '~/data/rivendale'
+    data_dir = '~/data/rivendale_day_2'
     # save_dir = ''
 
     # # Set to True to save images to disk

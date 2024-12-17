@@ -72,25 +72,28 @@ DirectorGui::DirectorGui(int argc, char **argv)
     left_layout->addWidget(status_label_);
 
     // Add capture button to the left layout
-    auto button = new QPushButton("Capture Image", this);
-    left_layout->addWidget(button);
-    connect(button, &QPushButton::clicked, this, &DirectorGui::handle_button_click);
+    capture_button_ = new QPushButton("Capture Image", this);
+    capture_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    left_layout->addWidget(capture_button_, 1);
+    connect(capture_button_, &QPushButton::clicked, this, &DirectorGui::handle_capture_button_click);
 
     // Add record button to the left layout
-    auto record_button_ = new QPushButton("Record Video", this);
-    left_layout->addWidget(record_button_);
+    record_button_ = new QPushButton("Record Video", this);
+    record_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    left_layout->addWidget(record_button_, 1);
     connect(record_button_, &QPushButton::clicked, this, &DirectorGui::handle_record_button_click);
-
-    // Add a button to start recording a rosbag
-    auto rosbag_button = new QPushButton("Start Rosbag", this);
-    left_layout->addWidget(rosbag_button);
-    connect(rosbag_button, &QPushButton::clicked, this, &DirectorGui::handle_rosbag_button_click);
 
     // Add log area to the left layout
     log_area_ = new QTextEdit(this);
     log_area_->setReadOnly(true);
-    log_area_->setMinimumHeight(100); // Optional: Set a minimum height
-    left_layout->addWidget(log_area_);
+    log_area_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    left_layout->addWidget(log_area_, 1);
+
+    // Add a button to start recording a rosbag
+    rosbag_button_ = new QPushButton("Start Rosbag", this);
+    rosbag_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    left_layout->addWidget(rosbag_button_, 1);
+    connect(rosbag_button_, &QPushButton::clicked, this, &DirectorGui::handle_rosbag_button_click);
 
     // Connect ROS 2 log messages to the GUI log area
     connect(this, &DirectorGui::newDirectorMessage, this, [this](const QString &m)
@@ -154,7 +157,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     setStyleSheet(style_sheet);
 }
 
-void DirectorGui::handle_button_click()
+void DirectorGui::handle_capture_button_click()
 {
     auto message = std_msgs::msg::String();
     message.data = "capture " + std::to_string(image_count_++);
@@ -175,6 +178,7 @@ void DirectorGui::handle_record_button_click()
         publisher_->publish(message);
         status_label_->setText("Recording stopped");
         RCLCPP_INFO(this->get_logger(), "Recording stopped");
+        record_button_->setStyleSheet("");
     }
     else
     {
@@ -195,6 +199,7 @@ void DirectorGui::handle_record_button_click()
         publisher_->publish(message);
         status_label_->setText("Recording started");
         RCLCPP_INFO(this->get_logger(), "Recording started");
+        record_button_->setStyleSheet("background-color: blue;");
     }
 }
 
@@ -209,6 +214,7 @@ void DirectorGui::handle_rosbag_button_click()
         status_label_->setText("Stopped recording rosbag");
         RCLCPP_INFO(this->get_logger(), "Stopped recording rosbag with PID: %d", rosbag_pid_);
         rosbag_pid_ = -1;
+        rosbag_button_->setStyleSheet("");
     }
     else
     {
@@ -250,6 +256,7 @@ void DirectorGui::handle_rosbag_button_click()
         publisher_->publish(message);
         status_label_->setText("Started recording rosbag");
         RCLCPP_INFO(this->get_logger(), "Started recording rosbag with PID: %d", rosbag_pid_);
+        rosbag_button_->setStyleSheet("background-color: red;");
     }
 }
 
