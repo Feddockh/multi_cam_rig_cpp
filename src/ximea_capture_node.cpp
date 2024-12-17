@@ -96,7 +96,7 @@ bool XimeaCaptureNode::initialize_camera()
     }
 
     // Set image format
-    xiSetParamInt(xi_handle_, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
+    xiSetParamInt(xi_handle_, XI_PRM_IMAGE_DATA_FORMAT, XI_RAW8);
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to set image format.");

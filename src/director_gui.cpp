@@ -226,18 +226,11 @@ void DirectorGui::handle_rosbag_button_click()
         std::stringstream ss;
         ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S");
         std::string dir_name = data_dir_ + "/rosbag_" + ss.str();
-        
-        // Start the rosbag recording (in the background)
-        std::string cmd = "ros2 bag record -o " + dir_name + " " 
-            + director_topic_ + " "
-            + firefly_left_topic_ + " " 
-            + firefly_right_topic_ + " " 
-            + ximea_topic_ + " " 
-            + zed_left_topic_ + " " 
-            + zed_right_topic_ + " " 
-            + zed_imu_topic_ + "> /dev/null 2>&1 & echo $!";
 
-        FILE* pipe = popen(cmd.c_str(), "r");
+        // Start the rosbag recording (in the background)
+        std::string cmd = "ros2 bag record -o " + dir_name + " " + director_topic_ + " " + firefly_left_topic_ + " " + firefly_right_topic_ + " " + ximea_topic_ + " " + zed_left_topic_ + " " + zed_right_topic_ + " " + zed_imu_topic_ + "> /dev/null 2>&1 & echo $!";
+
+        FILE *pipe = popen(cmd.c_str(), "r");
         if (pipe)
         {
             char buffer[128];
@@ -269,71 +262,74 @@ void DirectorGui::director_callback(const std_msgs::msg::String::SharedPtr msg)
 
 void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, QLabel *label)
 {
-    try
+    QtConcurrent::run([this, msg, label]()
     {
-        cv_bridge::CvImagePtr cv_ptr;
-        QImage::Format image_format;
-
-        // Determine the encoding and QImage format based on the number of channels
-        if (msg->encoding == "mono8" || msg->encoding == "mono16" ||
-            msg->encoding == "8UC1" || msg->encoding == "16UC1")
+        try
         {
-            // Grayscale image
-            cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
-            image_format = QImage::Format_Grayscale8;
+            cv_bridge::CvImagePtr cv_ptr;
+            QImage::Format image_format;
+
+            // Determine the encoding and QImage format based on the number of channels
+            if (msg->encoding == "mono8" || msg->encoding == "mono16" ||
+                msg->encoding == "8UC1" || msg->encoding == "16UC1")
+            {
+                // Grayscale image
+                cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
+                image_format = QImage::Format_Grayscale8;
+            }
+            else if (msg->encoding == "bgr8" || msg->encoding == "bgra8" ||
+                    msg->encoding == "rgb8" || msg->encoding == "rgba8")
+            {
+                // Color image
+                cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
+                image_format = QImage::Format_BGR888;
+            }
+            else
+            {
+                RCLCPP_WARN(this->get_logger(), "Unsupported image encoding: %s", msg->encoding.c_str());
+                return;
+            }
+
+            // Determine aspect ratio
+            double aspect_ratio = static_cast<double>(cv_ptr->image.cols) / cv_ptr->image.rows;
+
+            // Calculate label size based on window dimensions
+            int max_width = (window_width_ * 3 / 4);
+            int max_height = window_height_ / 3;
+            if (label != ximea_label_)
+            {
+                max_width = max_width / 2;
+            }
+
+            // Calculate scaled size maintaining aspect ratio
+            int scaled_width = max_width;
+            int scaled_height = static_cast<int>(scaled_width / aspect_ratio);
+            if (scaled_height > max_height)
+            {
+                scaled_height = max_height;
+                scaled_width = static_cast<int>(scaled_height * aspect_ratio);
+            }
+
+            // Create QImage from cv::Mat
+            QImage q_image_copy(cv_ptr->image.data,
+                                cv_ptr->image.cols,
+                                cv_ptr->image.rows,
+                                static_cast<int>(cv_ptr->image.step),
+                                image_format);
+
+            // Ensure the QImage owns its data
+            q_image_copy = q_image_copy.copy();
+
+            QMetaObject::invokeMethod(this, [label, q_image_copy, scaled_width, scaled_height]()
+            {
+                label->setPixmap(QPixmap::fromImage(q_image_copy).scaled(scaled_width, scaled_height, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            });
         }
-        else if (msg->encoding == "bgr8" || msg->encoding == "bgra8" ||
-                 msg->encoding == "rgb8" || msg->encoding == "rgba8")
+        catch (const cv_bridge::Exception &e)
         {
-            // Color image
-            cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
-            image_format = QImage::Format_BGR888;
-        }
-        else
-        {
-            RCLCPP_WARN(this->get_logger(), "Unsupported image encoding: %s", msg->encoding.c_str());
-            return;
-        }
-
-        // Determine aspect ratio
-        double aspect_ratio = static_cast<double>(cv_ptr->image.cols) / cv_ptr->image.rows;
-
-        // Calculate label size based on window dimensions
-        int max_width = (window_width_ * 3 / 4);
-        int max_height = window_height_ / 3;
-        if (label != ximea_label_)
-        {
-            max_width = max_width / 2;
-        }
-
-        // Calculate scaled size maintaining aspect ratio
-        int scaled_width = max_width;
-        int scaled_height = static_cast<int>(scaled_width / aspect_ratio);
-        if (scaled_height > max_height)
-        {
-            scaled_height = max_height;
-            scaled_width = static_cast<int>(scaled_height * aspect_ratio);
-        }
-
-        // Create QImage from cv::Mat
-        QImage q_image_copy(cv_ptr->image.data,
-                            cv_ptr->image.cols,
-                            cv_ptr->image.rows,
-                            static_cast<int>(cv_ptr->image.step),
-                            image_format);
-
-        // Ensure the QImage owns its data
-        q_image_copy = q_image_copy.copy();
-
-        QMetaObject::invokeMethod(this, [label, q_image_copy, scaled_width, scaled_height]()
-        {
-            label->setPixmap(QPixmap::fromImage(q_image_copy).scaled(scaled_width, scaled_height, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-        });
-    }
-    catch (const cv_bridge::Exception &e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Failed to convert image: %s", e.what());
-    }
+            RCLCPP_ERROR(this->get_logger(), "Failed to convert image: %s", e.what());
+        } 
+    });
 }
 
 void DirectorGui::closeEvent(QCloseEvent *event)

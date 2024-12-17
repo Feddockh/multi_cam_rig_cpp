@@ -19,6 +19,7 @@
 #include <QScreen>
 #include <QGuiApplication>
 #include <chrono>
+#include <QtConcurrent/QtConcurrent>
 
 class DirectorGui : public QWidget, public rclcpp::Node
 {
