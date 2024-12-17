@@ -38,9 +38,6 @@ private:
     HANDLE xi_handle_;
     bool camera_initialized_;
 
-    // Camera Parameters
-    int exposure_time_ = 1000; // in microseconds
-
     // Image storage
     cv::Mat image_;
 };

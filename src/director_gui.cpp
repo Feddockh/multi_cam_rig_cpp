@@ -271,7 +271,29 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
 {
     try
     {
-        cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
+        cv_bridge::CvImagePtr cv_ptr;
+        QImage::Format image_format;
+
+        // Determine the encoding and QImage format based on the number of channels
+        if (msg->encoding == "mono8" || msg->encoding == "mono16" ||
+            msg->encoding == "8UC1" || msg->encoding == "16UC1")
+        {
+            // Grayscale image
+            cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
+            image_format = QImage::Format_Grayscale8;
+        }
+        else if (msg->encoding == "bgr8" || msg->encoding == "bgra8" ||
+                 msg->encoding == "rgb8" || msg->encoding == "rgba8")
+        {
+            // Color image
+            cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
+            image_format = QImage::Format_BGR888;
+        }
+        else
+        {
+            RCLCPP_WARN(this->get_logger(), "Unsupported image encoding: %s", msg->encoding.c_str());
+            return;
+        }
 
         // Determine aspect ratio
         double aspect_ratio = static_cast<double>(cv_ptr->image.cols) / cv_ptr->image.rows;
@@ -293,10 +315,20 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
             scaled_width = static_cast<int>(scaled_height * aspect_ratio);
         }
 
-        QImage q_image_copy = QImage(cv_ptr->image.data, cv_ptr->image.cols, cv_ptr->image.rows, QImage::Format_BGR888).copy();
+        // Create QImage from cv::Mat
+        QImage q_image_copy(cv_ptr->image.data,
+                            cv_ptr->image.cols,
+                            cv_ptr->image.rows,
+                            static_cast<int>(cv_ptr->image.step),
+                            image_format);
+
+        // Ensure the QImage owns its data
+        q_image_copy = q_image_copy.copy();
 
         QMetaObject::invokeMethod(this, [label, q_image_copy, scaled_width, scaled_height]()
-                                  { label->setPixmap(QPixmap::fromImage(q_image_copy).scaled(scaled_width, scaled_height, Qt::KeepAspectRatio, Qt::SmoothTransformation)); });
+        {
+            label->setPixmap(QPixmap::fromImage(q_image_copy).scaled(scaled_width, scaled_height, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        });
     }
     catch (const cv_bridge::Exception &e)
     {

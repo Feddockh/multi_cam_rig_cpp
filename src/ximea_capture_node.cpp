@@ -65,18 +65,38 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
-    // Set exposure time
-    stat = xiSetParamInt(xi_handle_, XI_PRM_EXPOSURE, exposure_time_);
+    // Set auto exposure/gain
+    stat = xiSetParamInt(xi_handle_, XI_PRM_AEAG, XI_ON);
     if (stat != XI_OK)
     {
-        RCLCPP_ERROR(this->get_logger(), "Failed to set exposure time.");
+        RCLCPP_ERROR(this->get_logger(), "Failed to set auto exposure/gain.");
         xiCloseDevice(xi_handle_);
         xi_handle_ = nullptr;
         return false;
     }
 
-    // Set image format to RGB24
-    xiSetParamInt(xi_handle_, XI_PRM_IMAGE_DATA_FORMAT, XI_RGB24);
+    // Correct sensor defects
+    stat = xiSetParamInt(xi_handle_, XI_PRM_SENS_DEFECTS_CORR, XI_ON);
+    if (stat != XI_OK)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to correct sensor defects.");
+        xiCloseDevice(xi_handle_);
+        xi_handle_ = nullptr;
+        return false;
+    }
+
+    // Set the downsample factor
+    stat = xiSetParamInt(xi_handle_, XI_PRM_DOWNSAMPLING, XI_DWN_1x1);
+    if (stat != XI_OK)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set downsample factor.");
+        xiCloseDevice(xi_handle_);
+        xi_handle_ = nullptr;
+        return false;
+    }
+
+    // Set image format
+    xiSetParamInt(xi_handle_, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO8);
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to set image format.");
@@ -132,7 +152,7 @@ void XimeaCaptureNode::capture_image()
     memset(&image, 0, sizeof(image));
     image.size = sizeof(XI_IMG);
 
-    XI_RETURN stat = xiGetImage(xi_handle_, 5000, &image);
+    XI_RETURN stat = xiGetImage(xi_handle_, 1000, &image);
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to get image.");
@@ -145,16 +165,16 @@ void XimeaCaptureNode::capture_image()
         return;
     }
 
-    // RCLCPP_INFO(this->get_logger(), "Image Width: %d, Height: %d, Format: %d", image.width, image.height, image.frm);
+    RCLCPP_INFO(this->get_logger(), "Image Width: %d, Height: %d, Format: %d", image.width, image.height, image.frm);
 
-    // Ensure the image format matches XI_RGB24 (3 channels)
-    cv::Mat cvImageBGR(image.height, image.width, CV_8UC3, image.bp);
+    // Ensure the image format matches XI_MONO8 (1 channel)
+    cv::Mat cvImageMono(image.height, image.width, CV_8UC1, image.bp);
 
     // Clone the image to ensure data integrity
-    image_ = cvImageBGR.clone();
+    image_ = cvImageMono.clone();
 
     // Create ROS Image message
-    auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image_).toImageMsg();
+    auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", image_).toImageMsg();
 
     // Publish the image
     image_publisher_->publish(*image_msg);
