@@ -115,7 +115,7 @@ void ZedCaptureNode::capture_image()
         right_image_publisher_->publish(*right_msg);
 
         auto completion_msg = std_msgs::msg::String();
-        completion_msg.data = "ZED Complete";
+        completion_msg.data = "ZED complete";
         director_publisher_->publish(completion_msg);
         RCLCPP_INFO(this->get_logger(), "Published ZED images.");
     }
