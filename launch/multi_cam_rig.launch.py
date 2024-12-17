@@ -96,8 +96,8 @@ def generate_launch_description():
 
     launch_description = LaunchDescription([
         director_gui_node,
-        # firefly_synchronized_launch,
-        # firefly_capture_node,
+        firefly_synchronized_launch,
+        firefly_capture_node,
         ximea_capture_node,
         zed_capture_node,
         exit_handler
