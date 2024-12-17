@@ -287,7 +287,7 @@ void XimeaCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr 
         // Capture the image
         if (camera_initialized_)
         {
-            // std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             capture_image();
         }
         else
@@ -309,7 +309,7 @@ void XimeaCaptureNode::capture_image()
     memset(&image, 0, sizeof(image));
     image.size = sizeof(XI_IMG);
 
-    XI_RETURN stat = xiGetImage(xi_handle_, 1000, &image);
+    XI_RETURN stat = xiGetImage(xi_handle_, 5000, &image);
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to get image.");

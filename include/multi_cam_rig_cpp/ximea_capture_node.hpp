@@ -14,7 +14,6 @@
 #include <chrono>
 #include <thread>
 #include <filesystem>
-#include <future>
 
 class XimeaCaptureNode : public rclcpp::Node
 {
