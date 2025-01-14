@@ -19,6 +19,8 @@
     <build_depend>OpenCV</build_depend>
     <build_depend>CUDA</build_depend>
     <build_depend>Qt5Widgets</build_depend>
+    <build_depend>rclpy</build_depend>
+    <build_depend>message_filters</build_depend>
 
     <exec_depend>rclcpp</exec_depend>
     <exec_depend>rclcpp_components</exec_depend>
@@ -30,6 +32,8 @@
     <exec_depend>OpenCV</exec_depend>
     <exec_depend>CUDA</exec_depend>
     <exec_depend>Qt5Widgets</exec_depend>
+    <exec_depend>rclpy</exec_depend>
+    <exec_depend>message_filters</exec_depend>
 
     <exec_depend>python3</exec_depend>
     <exec_depend>cv_bridge</exec_depend>

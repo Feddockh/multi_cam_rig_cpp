@@ -18,6 +18,8 @@ find_package(OpenCV REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
+find_package(rclpy REQUIRED)
+find_package(message_filters REQUIRED)
 
 
 # Find Ximea SDK
@@ -100,7 +102,6 @@ install(DIRECTORY
     DESTINATION share/${PROJECT_NAME}
 )
 
-
 # Install the config files
 install(DIRECTORY
     config
@@ -114,9 +115,9 @@ install(DIRECTORY
 )
 
 # Install the scripts
-# install(
-#   PROGRAMS scripts/camera_calibration.py
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+install(
+    PROGRAMS scripts/bag_to_images.py
+    DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
