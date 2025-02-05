@@ -76,10 +76,30 @@ bool XimeaCaptureNode::initialize_camera()
     }
 
     // Set auto exposure/gain
-    stat = xiSetParamInt(xi_handle_, XI_PRM_AEAG, XI_ON);
+    // stat = xiSetParamInt(xi_handle_, XI_PRM_AEAG, XI_ON);
+    // if (stat != XI_OK)
+    // {
+    //     RCLCPP_ERROR(this->get_logger(), "Failed to set auto exposure/gain.");
+    //     xiCloseDevice(xi_handle_);
+    //     xi_handle_ = nullptr;
+    //     return false;
+    // }
+
+    // Set exposure time
+    stat = xiSetParamInt(xi_handle_, XI_PRM_EXPOSURE, 100000);
     if (stat != XI_OK)
     {
-        RCLCPP_ERROR(this->get_logger(), "Failed to set auto exposure/gain.");
+        RCLCPP_ERROR(this->get_logger(), "Failed to set exposure time.");
+        xiCloseDevice(xi_handle_);
+        xi_handle_ = nullptr;
+        return false;
+    }
+
+    // Set the gain
+    stat = xiSetParamFloat(xi_handle_, XI_PRM_GAIN, 0.0);
+    if (stat != XI_OK)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set gain.");
         xiCloseDevice(xi_handle_);
         xi_handle_ = nullptr;
         return false;
