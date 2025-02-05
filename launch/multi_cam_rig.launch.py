@@ -21,7 +21,7 @@ def generate_launch_description():
     zed_imu_topic = '/multi_cam_rig/zed/imu'
 
     # Save options
-    data_dir = '~/data/rivendale_day_2'
+    data_dir = '~/data/calibration'
 
     # Create the director gui node
     director_gui_node = Node(
