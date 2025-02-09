@@ -41,7 +41,7 @@ ZedCaptureNode::~ZedCaptureNode()
 bool ZedCaptureNode::initialize_camera()
 {
     sl::InitParameters init_params;
-    init_params.camera_resolution = sl::RESOLUTION::HD1080;
+    init_params.camera_resolution = sl::RESOLUTION::HD4K;
     init_params.camera_fps = 30;
     init_params.coordinate_units = sl::UNIT::MILLIMETER;
     init_params.coordinate_system = sl::COORDINATE_SYSTEM::RIGHT_HANDED_Y_UP;
@@ -115,7 +115,7 @@ void ZedCaptureNode::capture_image()
         right_image_publisher_->publish(*right_msg);
 
         auto completion_msg = std_msgs::msg::String();
-        completion_msg.data = "ZED completed";
+        completion_msg.data = "ZED complete";
         director_publisher_->publish(completion_msg);
         RCLCPP_INFO(this->get_logger(), "Published ZED images.");
     }

@@ -91,7 +91,7 @@ void FireflyCaptureNode::check_and_publish_completion()
     if (left_image_ && right_image_)
     {
         auto completion_msg = std_msgs::msg::String();
-        completion_msg.data = "Firefly Complete";
+        completion_msg.data = "Firefly complete";
         director_publisher_->publish(completion_msg);
         RCLCPP_INFO(this->get_logger(), "Published Firefly images.");
 
