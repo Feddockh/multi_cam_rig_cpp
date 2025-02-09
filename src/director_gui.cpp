@@ -31,18 +31,18 @@ DirectorGui::DirectorGui(int argc, char **argv)
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
         firefly_left_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, firefly_left_label_); }));
-    image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        firefly_right_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
-        { image_callback(msg, firefly_right_label_); }));
+    // image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
+    //     firefly_right_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+    //     { image_callback(msg, firefly_right_label_); }));
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
         ximea_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, ximea_label_); }));
     image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
         zed_left_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
         { image_callback(msg, zed_left_label_); }));
-    image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
-        zed_right_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
-        { image_callback(msg, zed_right_label_); }));
+    // image_subscribers_.emplace_back(create_subscription<sensor_msgs::msg::Image>(
+    //     zed_right_topic_, 10, [this](const sensor_msgs::msg::Image::SharedPtr msg)
+    //     { image_callback(msg, zed_right_label_); }));
 
     // Subscribe to IMU topic
     imu_subscriber_ = create_subscription<sensor_msgs::msg::Imu>(
@@ -59,10 +59,10 @@ DirectorGui::DirectorGui(int argc, char **argv)
     window_height_ = screenGeometry.height();
     resize(window_width_, window_height_);
 
-    // Main layout: Horizontal layout for left and right sections
+    // --- Main Layout: Three Equal Columns ---
     auto main_layout = new QHBoxLayout(this);
 
-    // Left layout: Contains button and log area
+    // --- Left Column: Capture/Record/Output/Rosbag ---
     auto left_layout = new QVBoxLayout();
     left_layout->setSpacing(10); // Optional spacing between widgets
 
@@ -99,33 +99,116 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(this, &DirectorGui::newDirectorMessage, this, [this](const QString &m)
             { log_area_->append(m); });
 
-    // Add the left layout to the main layout with 1/4 stretch
+    // Add left layout with 1/3 stretch to the main layout
     main_layout->addLayout(left_layout, 1); // Stretch factor = 1
 
-    // Right layout: Contains the multiple image displays
-    auto right_layout = new QGridLayout();
-    firefly_left_label_ = new QLabel(this);
-    firefly_right_label_ = new QLabel(this);
-    ximea_label_ = new QLabel(this);
-    zed_left_label_ = new QLabel(this);
-    zed_right_label_ = new QLabel(this);
+    // --- Middle Column: Exposure Controls (Using Sliders) ---
+    auto middle_layout = new QVBoxLayout();
+    middle_layout->setSpacing(10);
+    middle_layout->setAlignment(Qt::AlignCenter); // Center the controls vertically
+
+    // --- Firefly Exposure Control ---
+    firefly_exposure_label_ = new QLabel("Firefly Exposure (1 - 10000)", this);
+    firefly_exposure_label_->setAlignment(Qt::AlignCenter);
+    middle_layout->addWidget(firefly_exposure_label_);
+
+    // Create a horizontal layout for the slider and its current value display
+    auto firefly_exposure_layout = new QHBoxLayout();
+    firefly_exposure_slider_ = new QSlider(Qt::Horizontal, this);
+    firefly_exposure_slider_->setRange(1, 10000);
+    firefly_exposure_slider_->setMinimumHeight(80); // CHANGED: Make slider larger
+    firefly_exposure_slider_->setTickPosition(QSlider::TicksBelow);
+    firefly_exposure_slider_->setTickInterval(500);
+    firefly_exposure_layout->addWidget(firefly_exposure_slider_);
+
+    firefly_exposure_value_label_ = new QLabel(QString::number(firefly_exposure_slider_->value()), this);
+    firefly_exposure_value_label_->setAlignment(Qt::AlignCenter);
+    firefly_exposure_layout->addWidget(firefly_exposure_value_label_);
+    middle_layout->addLayout(firefly_exposure_layout);
+
+    // Update the value label when the slider moves
+    connect(firefly_exposure_slider_, &QSlider::valueChanged, this,
+            [this](int value) { firefly_exposure_value_label_->setText(QString::number(value)); });
+
+    // --- Ximea Exposure Control ---
+    ximea_exposure_label_ = new QLabel("Ximea Exposure (1 - 10000)", this);
+    ximea_exposure_label_->setAlignment(Qt::AlignCenter);
+    middle_layout->addWidget(ximea_exposure_label_);
+
+    auto ximea_exposure_layout = new QHBoxLayout();
+    ximea_exposure_slider_ = new QSlider(Qt::Horizontal, this);
+    ximea_exposure_slider_->setRange(1, 10000);
+    ximea_exposure_slider_->setMinimumHeight(80); // CHANGED: Make slider larger
+    ximea_exposure_slider_->setTickPosition(QSlider::TicksBelow);
+    ximea_exposure_slider_->setTickInterval(500);
+    ximea_exposure_layout->addWidget(ximea_exposure_slider_);
+
+    ximea_exposure_value_label_ = new QLabel(QString::number(ximea_exposure_slider_->value()), this);
+    ximea_exposure_value_label_->setAlignment(Qt::AlignCenter);
+    ximea_exposure_layout->addWidget(ximea_exposure_value_label_);
+    middle_layout->addLayout(ximea_exposure_layout);
+
+    connect(ximea_exposure_slider_, &QSlider::valueChanged, this,
+            [this](int value) { ximea_exposure_value_label_->setText(QString::number(value)); });
+
+    // --- Zed Exposure Control ---
+    zed_exposure_label_ = new QLabel("Zed Exposure (1 - 10000)", this);
+    zed_exposure_label_->setAlignment(Qt::AlignCenter);
+    middle_layout->addWidget(zed_exposure_label_);
+
+    auto zed_exposure_layout = new QHBoxLayout();
+    zed_exposure_slider_ = new QSlider(Qt::Horizontal, this);
+    zed_exposure_slider_->setRange(1, 10000);
+    zed_exposure_slider_->setMinimumHeight(80); // CHANGED: Make slider larger
+    zed_exposure_slider_->setTickPosition(QSlider::TicksBelow);
+    zed_exposure_slider_->setTickInterval(500);
+    zed_exposure_layout->addWidget(zed_exposure_slider_);
+
+    zed_exposure_value_label_ = new QLabel(QString::number(zed_exposure_slider_->value()), this);
+    zed_exposure_value_label_->setAlignment(Qt::AlignCenter);
+    zed_exposure_layout->addWidget(zed_exposure_value_label_);
+    middle_layout->addLayout(zed_exposure_layout);
+
+    connect(zed_exposure_slider_, &QSlider::valueChanged, this,
+            [this](int value) { zed_exposure_value_label_->setText(QString::number(value)); });
+
+    // --- Update Exposure Button ---
+    update_exposure_button_ = new QPushButton("Update Exposure", this);
+    update_exposure_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // CHANGED: Make button large like left column buttons
+    update_exposure_button_->setMinimumHeight(80); // CHANGED: Increase button size
+    middle_layout->addWidget(update_exposure_button_);
+    connect(update_exposure_button_, &QPushButton::clicked, this, &DirectorGui::handle_update_exposure);
+
+    // Add middle layout with 1/3 stretch to the main layout
+    main_layout->addLayout(middle_layout, 1); // Stretch factor = 1
+
+    // --- Right Column: Image Displays ---
+    auto right_layout = new QVBoxLayout();
+    right_layout->setSpacing(10);
 
     // Add image labels to the right layout
-    for (QLabel *label : {firefly_left_label_, firefly_right_label_, ximea_label_, zed_left_label_, zed_right_label_})
-    {
-        label->setStyleSheet("border: 1px solid black;");
-        label->setScaledContents(true);
-        label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // Allow expanding
-    }
+    firefly_left_label_ = new QLabel(this);
+    firefly_left_label_->setStyleSheet("border: 1px solid black;");
+    firefly_left_label_->setScaledContents(true);
+    firefly_left_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    right_layout->addWidget(firefly_left_label_);
 
-    right_layout->addWidget(firefly_left_label_, 0, 0);
-    right_layout->addWidget(firefly_right_label_, 0, 1);
-    right_layout->addWidget(ximea_label_, 1, 0, 1, 2);
-    right_layout->addWidget(zed_left_label_, 2, 0);
-    right_layout->addWidget(zed_right_label_, 2, 1);
+    ximea_label_ = new QLabel(this);
+    ximea_label_->setStyleSheet("border: 1px solid black;");
+    ximea_label_->setScaledContents(true);
+    ximea_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    right_layout->addWidget(ximea_label_);
 
-    // Add the right layout to the main layout with 3/4 stretch
-    main_layout->addLayout(right_layout, 3); // Stretch factor = 3
+    zed_left_label_ = new QLabel(this);
+    zed_left_label_->setStyleSheet("border: 1px solid black;");
+    zed_left_label_->setScaledContents(true);
+    zed_left_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    right_layout->addWidget(zed_left_label_);
+
+    // Add right layout with 1/3 stretch to the main layout
+    main_layout->addLayout(right_layout, 1); // Stretch factor = 1
+
+    // Set the main layout as the central layout
     setLayout(main_layout);
 
     // Apply stylesheet
@@ -157,6 +240,29 @@ DirectorGui::DirectorGui(int argc, char **argv)
     setStyleSheet(style_sheet);
 }
 
+// -----------------------------------------------------------------------------
+// Slot: Update Exposure (Triggered only when the update button is pressed)
+// -----------------------------------------------------------------------------
+void DirectorGui::handle_update_exposure()
+{
+    int firefly_exp = firefly_exposure_slider_->value();
+    int ximea_exp = ximea_exposure_slider_->value();
+    int zed_exp = zed_exposure_slider_->value();
+
+    QString msg = QString("Updated Exposure - Firefly: %1, Ximea: %2, Zed: %3")
+                      .arg(firefly_exp)
+                      .arg(ximea_exp)
+                      .arg(zed_exp);
+    emit newDirectorMessage(msg);
+    RCLCPP_INFO(this->get_logger(), "Exposure updated: Firefly=%d, Ximea=%d, Zed=%d",
+                firefly_exp, ximea_exp, zed_exp);
+
+    // TODO: Add logic here to send these exposure settings to the cameras via ROS.
+}
+
+// -----------------------------------------------------------------------------
+// Slot: Capture Button
+// -----------------------------------------------------------------------------
 void DirectorGui::handle_capture_button_click()
 {
     auto message = std_msgs::msg::String();
@@ -167,6 +273,9 @@ void DirectorGui::handle_capture_button_click()
     RCLCPP_INFO(this->get_logger(), "Published: %s", message.data.c_str());
 }
 
+// -----------------------------------------------------------------------------
+// Slot: Record Button (unchanged)
+// -----------------------------------------------------------------------------
 void DirectorGui::handle_record_button_click()
 {
     if (recording_)
@@ -203,6 +312,9 @@ void DirectorGui::handle_record_button_click()
     }
 }
 
+// -----------------------------------------------------------------------------
+// Slot: Rosbag Button (updated to record only required topics)
+// -----------------------------------------------------------------------------
 void DirectorGui::handle_rosbag_button_click()
 {
     if (rosbag_pid_ != -1)
@@ -228,7 +340,15 @@ void DirectorGui::handle_rosbag_button_click()
         std::string dir_name = data_dir_ + "/rosbag_" + ss.str();
 
         // Start the rosbag recording (in the background)
-        std::string cmd = "ros2 bag record -o " + dir_name + " " + director_topic_ + " " + firefly_left_topic_ + " " + firefly_right_topic_ + " " + ximea_topic_ + " " + zed_left_topic_ + " " + zed_right_topic_ + " " + zed_imu_topic_ + "> /dev/null 2>&1 & echo $!";
+        std::string cmd = "ros2 bag record -o " + dir_name + " " + 
+            director_topic_ + " " + 
+            firefly_left_topic_ + " " + 
+            firefly_right_topic_ + " " + 
+            ximea_topic_ + " " + 
+            zed_left_topic_ + " " + 
+            zed_right_topic_ + " " + 
+            zed_imu_topic_ + 
+            "> /dev/null 2>&1 & echo $!";
 
         FILE *pipe = popen(cmd.c_str(), "r");
         if (pipe)
@@ -253,6 +373,9 @@ void DirectorGui::handle_rosbag_button_click()
     }
 }
 
+// -----------------------------------------------------------------------------
+// Callback: Director Message
+// -----------------------------------------------------------------------------
 void DirectorGui::director_callback(const std_msgs::msg::String::SharedPtr msg)
 {
     // Instead of directly appending to log_area_, emit the signal
@@ -260,6 +383,9 @@ void DirectorGui::director_callback(const std_msgs::msg::String::SharedPtr msg)
     RCLCPP_INFO(this->get_logger(), "Received: %s", msg->data.c_str());
 }
 
+// -----------------------------------------------------------------------------
+// Callback: Image Processing
+// -----------------------------------------------------------------------------
 void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, QLabel *label)
 {
     QtConcurrent::run([this, msg, label]()
@@ -294,16 +420,12 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
             double aspect_ratio = static_cast<double>(cv_ptr->image.cols) / cv_ptr->image.rows;
 
             // Calculate label size based on window dimensions
-            int max_width = (window_width_ * 3 / 4);
+            int max_width = window_width_ / 3;
             int max_height = window_height_ / 3;
-            if (label != ximea_label_)
-            {
-                max_width = max_width / 2;
-            }
-
-            // Calculate scaled size maintaining aspect ratio
             int scaled_width = max_width;
             int scaled_height = static_cast<int>(scaled_width / aspect_ratio);
+
+            // Calculate scaled size maintaining aspect ratio
             if (scaled_height > max_height)
             {
                 scaled_height = max_height;
@@ -322,7 +444,8 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
 
             QMetaObject::invokeMethod(this, [label, q_image_copy, scaled_width, scaled_height]()
             {
-                label->setPixmap(QPixmap::fromImage(q_image_copy).scaled(scaled_width, scaled_height, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+                label->setPixmap(QPixmap::fromImage(q_image_copy)
+                    .scaled(scaled_width, scaled_height, Qt::KeepAspectRatio, Qt::SmoothTransformation));
             });
         }
         catch (const cv_bridge::Exception &e)
@@ -332,6 +455,9 @@ void DirectorGui::image_callback(const sensor_msgs::msg::Image::SharedPtr msg, Q
     });
 }
 
+// -----------------------------------------------------------------------------
+// closeEvent
+// -----------------------------------------------------------------------------
 void DirectorGui::closeEvent(QCloseEvent *event)
 {
     RCLCPP_INFO(this->get_logger(), "GUI window is closing. Initiating shutdown.");
@@ -349,6 +475,7 @@ void DirectorGui::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
+// -----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);

@@ -14,6 +14,7 @@
 #include <QWidget>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QSlider>
 #include <thread>
 #include <filesystem>
 #include <QScreen>
@@ -56,13 +57,27 @@ private:
     int window_height_;
     int window_width_;
 
+    // Left column widgets (capture controls and status)
     QPushButton *capture_button_;
     QPushButton *record_button_;
     QPushButton *rosbag_button_;
-
     QLabel *status_label_;
     QTextEdit *log_area_;
 
+    // Middle column widgets (exposure controls)
+    QLabel *firefly_exposure_label_;
+    QSlider *firefly_exposure_slider_;
+    QLabel *firefly_exposure_value_label_;
+    QLabel *ximea_exposure_label_;
+    QSlider *ximea_exposure_slider_;
+    QLabel *ximea_exposure_value_label_;
+    QLabel *zed_exposure_label_;
+    QSlider *zed_exposure_slider_;
+    QLabel *zed_exposure_value_label_;
+    
+    QPushButton *update_exposure_button_;
+
+    // Right column widgets (image displays)
     QLabel *firefly_left_label_;
     QLabel *firefly_right_label_;
     QLabel *ximea_label_;
@@ -76,6 +91,7 @@ private slots:
     void handle_capture_button_click();
     void handle_record_button_click();
     void handle_rosbag_button_click();
+    void handle_update_exposure();
 
 signals:
     void newDirectorMessage(QString msg);
