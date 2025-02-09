@@ -74,8 +74,8 @@ private:
     QLabel *zed_exposure_label_;
     QSlider *zed_exposure_slider_;
     QLabel *zed_exposure_value_label_;
-    
-    QPushButton *update_exposure_button_;
+
+    QPushButton *update_settings_button_;
 
     // Right column widgets (image displays)
     QLabel *firefly_left_label_;
@@ -84,6 +84,10 @@ private:
     QLabel *zed_left_label_;
     QLabel *zed_right_label_;
 
+    // New calibration buttons
+    QPushButton *ffc_calibrate_button_;
+    QPushButton *dark_calibrate_button_;
+
     QTimer *timer_;
     bool recording_ = false;
 
@@ -91,7 +95,11 @@ private slots:
     void handle_capture_button_click();
     void handle_record_button_click();
     void handle_rosbag_button_click();
-    void handle_update_exposure();
+
+    void handle_update_settings();
+
+    void handle_ffc_calibrate_button_click();
+    void handle_dark_calibrate_button_click();
 
 signals:
     void newDirectorMessage(QString msg);

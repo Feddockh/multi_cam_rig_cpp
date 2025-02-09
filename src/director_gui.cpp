@@ -107,7 +107,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     middle_layout->setSpacing(10);
     middle_layout->setAlignment(Qt::AlignCenter); // Center the controls vertically
 
-    // --- Firefly Exposure Control ---
+    // Firefly Exposure Control
     firefly_exposure_label_ = new QLabel("Firefly Exposure (1 - 10000)", this);
     firefly_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(firefly_exposure_label_);
@@ -130,7 +130,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(firefly_exposure_slider_, &QSlider::valueChanged, this,
             [this](int value) { firefly_exposure_value_label_->setText(QString::number(value)); });
 
-    // --- Ximea Exposure Control ---
+    // Ximea Exposure Control
     ximea_exposure_label_ = new QLabel("Ximea Exposure (1 - 10000)", this);
     ximea_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(ximea_exposure_label_);
@@ -151,7 +151,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(ximea_exposure_slider_, &QSlider::valueChanged, this,
             [this](int value) { ximea_exposure_value_label_->setText(QString::number(value)); });
 
-    // --- Zed Exposure Control ---
+    // Zed Exposure Control
     zed_exposure_label_ = new QLabel("Zed Exposure (1 - 10000)", this);
     zed_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(zed_exposure_label_);
@@ -172,12 +172,25 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(zed_exposure_slider_, &QSlider::valueChanged, this,
             [this](int value) { zed_exposure_value_label_->setText(QString::number(value)); });
 
-    // --- Update Exposure Button ---
-    update_exposure_button_ = new QPushButton("Update Exposure", this);
-    update_exposure_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // CHANGED: Make button large like left column buttons
-    update_exposure_button_->setMinimumHeight(80); // CHANGED: Increase button size
-    middle_layout->addWidget(update_exposure_button_);
-    connect(update_exposure_button_, &QPushButton::clicked, this, &DirectorGui::handle_update_exposure);
+    // Update Settings Button
+    update_settings_button_ = new QPushButton("Update Settings", this);
+    update_settings_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // Make button large like left column buttons
+    update_settings_button_->setMinimumHeight(80); // Increase button size
+    middle_layout->addWidget(update_settings_button_);
+    connect(update_settings_button_, &QPushButton::clicked, this, &DirectorGui::handle_update_settings);
+
+    // New Calibration Buttons
+    ffc_calibrate_button_ = new QPushButton("FFC Calibrate", this);
+    ffc_calibrate_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ffc_calibrate_button_->setMinimumHeight(80); // Make button large
+    middle_layout->addWidget(ffc_calibrate_button_);
+    connect(ffc_calibrate_button_, &QPushButton::clicked, this, &DirectorGui::handle_ffc_calibrate_button_click);
+
+    dark_calibrate_button_ = new QPushButton("Dark Calibrate", this);
+    dark_calibrate_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    dark_calibrate_button_->setMinimumHeight(80); // Make button large
+    middle_layout->addWidget(dark_calibrate_button_);
+    connect(dark_calibrate_button_, &QPushButton::clicked, this, &DirectorGui::handle_dark_calibrate_button_click);
 
     // Add middle layout with 1/3 stretch to the main layout
     main_layout->addLayout(middle_layout, 1); // Stretch factor = 1
@@ -236,28 +249,23 @@ DirectorGui::DirectorGui(int argc, char **argv)
             font-size: 14px;
             color: #333;
         }
+        QSlider::groove:horizontal {
+          border: 1px solid #999999;
+          height: 20px;
+          background: #d3d3d3;
+          margin: 0px;
+          border-radius: 10px;
+        }
+        QSlider::handle:horizontal {
+          background: #0078D7;
+          border: 1px solid #5c5c5c;
+          width: 80px;
+          height: 80px;
+          margin: -10px 0;
+          border-radius: 20px;
+        }
     )";
     setStyleSheet(style_sheet);
-}
-
-// -----------------------------------------------------------------------------
-// Slot: Update Exposure (Triggered only when the update button is pressed)
-// -----------------------------------------------------------------------------
-void DirectorGui::handle_update_exposure()
-{
-    int firefly_exp = firefly_exposure_slider_->value();
-    int ximea_exp = ximea_exposure_slider_->value();
-    int zed_exp = zed_exposure_slider_->value();
-
-    QString msg = QString("Updated Exposure - Firefly: %1, Ximea: %2, Zed: %3")
-                      .arg(firefly_exp)
-                      .arg(ximea_exp)
-                      .arg(zed_exp);
-    emit newDirectorMessage(msg);
-    RCLCPP_INFO(this->get_logger(), "Exposure updated: Firefly=%d, Ximea=%d, Zed=%d",
-                firefly_exp, ximea_exp, zed_exp);
-
-    // TODO: Add logic here to send these exposure settings to the cameras via ROS.
 }
 
 // -----------------------------------------------------------------------------
@@ -381,6 +389,50 @@ void DirectorGui::director_callback(const std_msgs::msg::String::SharedPtr msg)
     // Instead of directly appending to log_area_, emit the signal
     emit newDirectorMessage(QString::fromStdString(msg->data));
     RCLCPP_INFO(this->get_logger(), "Received: %s", msg->data.c_str());
+}
+
+// -----------------------------------------------------------------------------
+// Slot: Update Settings (Triggered only when the update button is pressed)
+// -----------------------------------------------------------------------------
+void DirectorGui::handle_update_settings()
+{
+    int firefly_exp = firefly_exposure_slider_->value();
+    int ximea_exp = ximea_exposure_slider_->value();
+    int zed_exp = zed_exposure_slider_->value();
+
+    QString msg = QString("Updated Settings - Firefly: %1, Ximea: %2, Zed: %3")
+                      .arg(firefly_exp)
+                      .arg(ximea_exp)
+                      .arg(zed_exp);
+    emit newDirectorMessage(msg);
+    RCLCPP_INFO(this->get_logger(), "Settings updated: Firefly=%d, Ximea=%d, Zed=%d",
+                firefly_exp, ximea_exp, zed_exp);
+
+    // TODO: Add logic here to send these exposure settings to the cameras via ROS.
+}
+
+// -----------------------------------------------------------------------------
+// Slot: FFC Calibrate Button (Sends a directive over the director topic)
+// -----------------------------------------------------------------------------
+void DirectorGui::handle_ffc_calibrate_button_click()
+{
+    std_msgs::msg::String message;
+    message.data = "FFC calibrate";
+    publisher_->publish(message);
+    status_label_->setText("FFC Calibration initiated");
+    RCLCPP_INFO(this->get_logger(), "Sent: %s", message.data.c_str());
+}
+
+// -----------------------------------------------------------------------------
+// Slot: Dark Calibrate Button (Sends a directive over the director topic)
+// -----------------------------------------------------------------------------
+void DirectorGui::handle_dark_calibrate_button_click()
+{
+    std_msgs::msg::String message;
+    message.data = "Dark calibrate";
+    publisher_->publish(message);
+    status_label_->setText("Dark Calibration initiated");
+    RCLCPP_INFO(this->get_logger(), "Sent: %s", message.data.c_str());
 }
 
 // -----------------------------------------------------------------------------
