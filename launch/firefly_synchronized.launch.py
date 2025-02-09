@@ -16,7 +16,8 @@ def launch_setup(context, *args, **kwargs):
 
     # Get the path to the parameter and calibration directories
     parameter_directory = LaunchConfig('parameter_directory').perform(context)
-    calibration_directory = LaunchConfig('calibration_directory').perform(context)
+    # calibration_directory = LaunchConfig('calibration_directory').perform(context)
+    calibration_directory = '' # Removes live rectification
 
     # Load the configuration file
     with open(config_file, 'r') as f:
@@ -52,6 +53,7 @@ def launch_setup(context, *args, **kwargs):
             ),
         ],
         output='screen',
+        arguments=['--ros-args', '--log-level', 'warn'],  # Set log level to WARN
     )
     return [container]
 

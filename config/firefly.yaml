@@ -42,7 +42,7 @@ firefly_left:
   gamma_enable: true
   width: 1440
   height: 1080
-  pixel_format: 'RGB8'
+  pixel_format: 'BGR8' # Color image
   chunk_mode_active: true
   chunk_selector_frame_id: 'FrameID'
   chunk_enable_frame_id: true
@@ -94,7 +94,7 @@ firefly_right:
   gamma_enable: true
   width: 1440
   height: 1080
-  pixel_format: 'RGB8'
+  pixel_format: 'BGR8' # Color image
   chunk_mode_active: true
   chunk_selector_frame_id: 'FrameID'
   chunk_enable_frame_id: true
