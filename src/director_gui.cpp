@@ -412,10 +412,29 @@ void DirectorGui::handle_update_settings()
 }
 
 // -----------------------------------------------------------------------------
+// Stop Recording
+// -----------------------------------------------------------------------------
+void DirectorGui::stop_recording()
+{
+    if (recording_)
+    {
+        timer_->stop();
+        recording_ = false;
+        auto message = std_msgs::msg::String();
+        message.data = "Recording stopped";
+        publisher_->publish(message);
+        status_label_->setText("Recording stopped");
+        RCLCPP_INFO(this->get_logger(), "Recording stopped");
+        record_button_->setStyleSheet("");
+    }
+}
+
+// -----------------------------------------------------------------------------
 // Slot: FFC Calibrate Button (Sends a directive over the director topic)
 // -----------------------------------------------------------------------------
 void DirectorGui::handle_ffc_calibrate_button_click()
 {
+    stop_recording();
     std_msgs::msg::String message;
     message.data = "FFC calibrate";
     publisher_->publish(message);
@@ -428,6 +447,7 @@ void DirectorGui::handle_ffc_calibrate_button_click()
 // -----------------------------------------------------------------------------
 void DirectorGui::handle_dark_calibrate_button_click()
 {
+    stop_recording();
     std_msgs::msg::String message;
     message.data = "Dark calibrate";
     publisher_->publish(message);

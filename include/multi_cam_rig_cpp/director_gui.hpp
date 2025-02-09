@@ -35,6 +35,7 @@ protected:
 private:
     void director_callback(const std_msgs::msg::String::SharedPtr msg);
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg, QLabel *label);
+    void stop_recording();
 
     std::string director_topic_;
     std::string firefly_left_topic_;
