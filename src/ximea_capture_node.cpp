@@ -98,6 +98,30 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
+    // Increase the internal buffer queue size (for example, to 10)
+    stat = xiSetParamInt(xi_handle_, XI_PRM_BUFFERS_QUEUE_SIZE, 20);
+    if (stat != XI_OK) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set buffers queue size.");
+        xiCloseDevice(xi_handle_);
+        xi_handle_ = nullptr;
+        return false;
+    }
+
+    // NEW: Increase the number of transport layer buffers committed.
+    // This parameter tells the driver how many buffers to commit to the transport layer (e.g., USB)
+    // Increasing this value may improve USB transport performance.
+    stat = xiSetParamInt(xi_handle_, XI_PRM_ACQ_TRANSPORT_BUFFER_COMMIT, 40);
+    if (stat != XI_OK) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set acq_transport_buffer_commit.");
+        // Optionally, you might choose to continue even if this fails.
+    }
+
+    // NEW: Enable recent frame mode so that xiGetImage returns the most recent frame
+    stat = xiSetParamInt(xi_handle_, XI_PRM_RECENT_FRAME, 1);
+    if (stat != XI_OK) {
+        RCLCPP_WARN(this->get_logger(), "Failed to set recent_frame mode.");
+    }
+
     // Set auto exposure/gain to off
     stat = xiSetParamInt(xi_handle_, XI_PRM_AEAG, XI_OFF);
     if (stat != XI_OK)
@@ -279,7 +303,6 @@ void XimeaCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr 
         // Capture the image
         if (camera_initialized_)
         {
-            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
             cv::Mat img = capture_calibrated_image();
             publish_image(img);
         }
@@ -364,11 +387,20 @@ cv::Mat XimeaCaptureNode::capture_raw_image()
         return cv::Mat();
     }
 
+    // NEW: Start timing before calling xiGetImage.
+    auto start = std::chrono::steady_clock::now();
+
     XI_IMG image;
     memset(&image, 0, sizeof(image));
     image.size = sizeof(XI_IMG);
 
-    XI_RETURN stat = xiGetImage(xi_handle_, 5000, &image);
+    XI_RETURN stat = xiGetImage(xi_handle_, 1000, &image);
+
+    // NEW: End timing after xiGetImage.
+    auto get_image_end = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "xiGetImage took %ld microseconds",
+                 std::chrono::duration_cast<std::chrono::microseconds>(get_image_end - start).count());
+
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to get image.");
@@ -384,12 +416,26 @@ cv::Mat XimeaCaptureNode::capture_raw_image()
     RCLCPP_INFO(this->get_logger(), "Image Width: %d, Height: %d, Format: %d", image.width, image.height, image.frm);
 
     cv::Mat cvImageMono(image.height, image.width, CV_8UC1, image.bp);
+
+    // NEW: End timing after conversion.
+    auto conversion_end = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "Image conversion took %ld microseconds",
+                 std::chrono::duration_cast<std::chrono::microseconds>(conversion_end - get_image_end).count());
+
     return cvImageMono.clone();
 }
 
 cv::Mat XimeaCaptureNode::capture_calibrated_image()
 {
+    // NEW: Start overall timing
+    auto start = std::chrono::steady_clock::now();
+
     cv::Mat raw = capture_raw_image();
+
+    // NEW: Log the time to capture the raw image
+    auto raw_capture_end = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "capture_raw_image took %ld microseconds",
+                 std::chrono::duration_cast<std::chrono::microseconds>(raw_capture_end - start).count());
 
     // Apply software FFC
     cv::Mat img;
@@ -402,6 +448,12 @@ cv::Mat XimeaCaptureNode::capture_calibrated_image()
         RCLCPP_WARN(this->get_logger(), "FFC files not found, capturing uncalibrated image.");
         img = raw;
     }
+
+    // NEW: End overall timing for capture_calibrated_image
+    auto end = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "capture_calibrated_image total took %ld microseconds",
+                 std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
+
     return img;
 }
 
@@ -515,11 +567,19 @@ void XimeaCaptureNode::calibrate_dark()
 
 void XimeaCaptureNode::publish_image(cv::Mat &image)
 {
+    // NEW: Start timing before conversion.
+    auto start = std::chrono::steady_clock::now();
+
     // Create ROS Image message
     auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", image).toImageMsg();
 
     // Publish the image
     image_publisher_->publish(*image_msg);
+
+    // NEW: End timing after publishing.
+    auto end = std::chrono::steady_clock::now();
+    RCLCPP_INFO(this->get_logger(), "publish_image took %ld microseconds",
+                 std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 
     auto completion_msg = std_msgs::msg::String();
     completion_msg.data = "XIMEA complete";
