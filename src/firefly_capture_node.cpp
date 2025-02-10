@@ -51,7 +51,7 @@ FireflyCaptureNode::~FireflyCaptureNode()
 
 void FireflyCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr msg)
 {
-    if (msg->data.rfind("capture ", 0) == 0) // Message starts with "capture "
+    if (msg->data.rfind("Capture ", 0) == 0) // Message starts with "capture "
     {
         // Extract the image ID from the message
         RCLCPP_INFO(this->get_logger(), "Received capture command: %s", msg->data.c_str());

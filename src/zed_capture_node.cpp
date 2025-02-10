@@ -62,7 +62,7 @@ bool ZedCaptureNode::initialize_camera()
 void ZedCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr msg)
 {
     // Check if the message starts with "capture "
-    if (msg->data.rfind("capture ", 0) == 0)
+    if (msg->data.rfind("Capture ", 0) == 0)
     {
 
         // Extract the image ID from the message

@@ -107,6 +107,28 @@ DirectorGui::DirectorGui(int argc, char **argv)
     middle_layout->setSpacing(10);
     middle_layout->setAlignment(Qt::AlignCenter); // Center the controls vertically
 
+    // Flash Duration Control
+    flash_duration_label_ = new QLabel("Flash Duration (1 - 10000)", this);
+    flash_duration_label_->setAlignment(Qt::AlignCenter);
+    middle_layout->addWidget(flash_duration_label_);
+
+    auto flash_duration_layout = new QHBoxLayout();
+    flash_duration_slider_ = new QSlider(Qt::Horizontal, this);
+    flash_duration_slider_->setRange(1, 10000);
+    flash_duration_slider_->setMinimumHeight(80);
+    flash_duration_slider_->setTickPosition(QSlider::TicksBelow);
+    flash_duration_slider_->setTickInterval(500);
+    flash_duration_slider_->setValue(flash_duration_);
+    flash_duration_layout->addWidget(flash_duration_slider_);
+
+    flash_duration_value_label_ = new QLabel(QString::number(flash_duration_slider_->value()), this);
+    flash_duration_value_label_->setAlignment(Qt::AlignCenter);
+    flash_duration_layout->addWidget(flash_duration_value_label_);
+    middle_layout->addLayout(flash_duration_layout);
+
+    connect(flash_duration_slider_, &QSlider::valueChanged, this,
+            [this](int value) { flash_duration_value_label_->setText(QString::number(value)); });
+
     // Firefly Exposure Control
     firefly_exposure_label_ = new QLabel("Firefly Exposure (1 - 10000)", this);
     firefly_exposure_label_->setAlignment(Qt::AlignCenter);
@@ -115,10 +137,11 @@ DirectorGui::DirectorGui(int argc, char **argv)
     // Create a horizontal layout for the slider and its current value display
     auto firefly_exposure_layout = new QHBoxLayout();
     firefly_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    firefly_exposure_slider_->setRange(1, 10000);
-    firefly_exposure_slider_->setMinimumHeight(80); // CHANGED: Make slider larger
+    firefly_exposure_slider_->setRange(1, 100000);
+    firefly_exposure_slider_->setMinimumHeight(80);
     firefly_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     firefly_exposure_slider_->setTickInterval(500);
+    firefly_exposure_slider_->setValue(firefly_exposure_);
     firefly_exposure_layout->addWidget(firefly_exposure_slider_);
 
     firefly_exposure_value_label_ = new QLabel(QString::number(firefly_exposure_slider_->value()), this);
@@ -130,17 +153,40 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(firefly_exposure_slider_, &QSlider::valueChanged, this,
             [this](int value) { firefly_exposure_value_label_->setText(QString::number(value)); });
 
+    // Ximea Gain Control
+    ximea_gain_label_ = new QLabel("Ximea Gain (-1.5 - 6.0 dB)", this);
+    ximea_gain_label_->setAlignment(Qt::AlignCenter);
+    middle_layout->addWidget(ximea_gain_label_);
+
+    auto ximea_gain_layout = new QHBoxLayout();
+    ximea_gain_slider_ = new QSlider(Qt::Horizontal, this);
+    ximea_gain_slider_->setRange(-15, 60); // Scale by 10 to handle decimals
+    ximea_gain_slider_->setMinimumHeight(80);
+    ximea_gain_slider_->setTickPosition(QSlider::TicksBelow);
+    ximea_gain_slider_->setTickInterval(1);
+    ximea_gain_slider_->setValue(static_cast<int>(ximea_gain_ * 10));
+    ximea_gain_layout->addWidget(ximea_gain_slider_);
+
+    ximea_gain_value_label_ = new QLabel(QString::number(ximea_gain_slider_->value() / 10.0, 'f', 1), this);
+    ximea_gain_value_label_->setAlignment(Qt::AlignCenter);
+    ximea_gain_layout->addWidget(ximea_gain_value_label_);
+    middle_layout->addLayout(ximea_gain_layout);
+
+    connect(ximea_gain_slider_, &QSlider::valueChanged, this,
+            [this](int value) { ximea_gain_value_label_->setText(QString::number(value / 10.0, 'f', 1)); });
+
     // Ximea Exposure Control
-    ximea_exposure_label_ = new QLabel("Ximea Exposure (1 - 10000)", this);
+    ximea_exposure_label_ = new QLabel("Ximea Exposure (500 - 300000 us)", this);
     ximea_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(ximea_exposure_label_);
 
     auto ximea_exposure_layout = new QHBoxLayout();
     ximea_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    ximea_exposure_slider_->setRange(1, 10000);
-    ximea_exposure_slider_->setMinimumHeight(80); // CHANGED: Make slider larger
+    ximea_exposure_slider_->setRange(500, 300000);
+    ximea_exposure_slider_->setMinimumHeight(80);
     ximea_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     ximea_exposure_slider_->setTickInterval(500);
+    ximea_exposure_slider_->setValue(ximea_exposure_);
     ximea_exposure_layout->addWidget(ximea_exposure_slider_);
 
     ximea_exposure_value_label_ = new QLabel(QString::number(ximea_exposure_slider_->value()), this);
@@ -151,44 +197,23 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(ximea_exposure_slider_, &QSlider::valueChanged, this,
             [this](int value) { ximea_exposure_value_label_->setText(QString::number(value)); });
 
-    // Zed Exposure Control
-    zed_exposure_label_ = new QLabel("Zed Exposure (1 - 10000)", this);
-    zed_exposure_label_->setAlignment(Qt::AlignCenter);
-    middle_layout->addWidget(zed_exposure_label_);
-
-    auto zed_exposure_layout = new QHBoxLayout();
-    zed_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    zed_exposure_slider_->setRange(1, 10000);
-    zed_exposure_slider_->setMinimumHeight(80); // CHANGED: Make slider larger
-    zed_exposure_slider_->setTickPosition(QSlider::TicksBelow);
-    zed_exposure_slider_->setTickInterval(500);
-    zed_exposure_layout->addWidget(zed_exposure_slider_);
-
-    zed_exposure_value_label_ = new QLabel(QString::number(zed_exposure_slider_->value()), this);
-    zed_exposure_value_label_->setAlignment(Qt::AlignCenter);
-    zed_exposure_layout->addWidget(zed_exposure_value_label_);
-    middle_layout->addLayout(zed_exposure_layout);
-
-    connect(zed_exposure_slider_, &QSlider::valueChanged, this,
-            [this](int value) { zed_exposure_value_label_->setText(QString::number(value)); });
-
     // Update Settings Button
     update_settings_button_ = new QPushButton("Update Settings", this);
-    update_settings_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding); // Make button large like left column buttons
-    update_settings_button_->setMinimumHeight(80); // Increase button size
+    update_settings_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    update_settings_button_->setMinimumHeight(80);
     middle_layout->addWidget(update_settings_button_);
     connect(update_settings_button_, &QPushButton::clicked, this, &DirectorGui::handle_update_settings);
 
     // New Calibration Buttons
     ffc_calibrate_button_ = new QPushButton("FFC Calibrate", this);
     ffc_calibrate_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ffc_calibrate_button_->setMinimumHeight(80); // Make button large
+    ffc_calibrate_button_->setMinimumHeight(80);
     middle_layout->addWidget(ffc_calibrate_button_);
     connect(ffc_calibrate_button_, &QPushButton::clicked, this, &DirectorGui::handle_ffc_calibrate_button_click);
 
     dark_calibrate_button_ = new QPushButton("Dark Calibrate", this);
     dark_calibrate_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    dark_calibrate_button_->setMinimumHeight(80); // Make button large
+    dark_calibrate_button_->setMinimumHeight(80);
     middle_layout->addWidget(dark_calibrate_button_);
     connect(dark_calibrate_button_, &QPushButton::clicked, this, &DirectorGui::handle_dark_calibrate_button_click);
 
@@ -274,7 +299,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
 void DirectorGui::handle_capture_button_click()
 {
     auto message = std_msgs::msg::String();
-    message.data = "capture " + std::to_string(image_count_++);
+    message.data = "Capture " + std::to_string(image_count_++);
     publisher_->publish(message);
 
     status_label_->setText(QString("Triggered: %1").arg(QString::fromStdString(message.data)));
@@ -303,7 +328,7 @@ void DirectorGui::handle_record_button_click()
         connect(timer_, &QTimer::timeout, this, [this]()
                 {
                     auto message = std_msgs::msg::String();
-                    message.data = "capture " + std::to_string(image_count_++);
+                    message.data = "Capture " + std::to_string(image_count_++);
                     publisher_->publish(message);
 
                     status_label_->setText(QString("Recording: %1").arg(QString::fromStdString(message.data)));
@@ -396,19 +421,45 @@ void DirectorGui::director_callback(const std_msgs::msg::String::SharedPtr msg)
 // -----------------------------------------------------------------------------
 void DirectorGui::handle_update_settings()
 {
-    int firefly_exp = firefly_exposure_slider_->value();
-    int ximea_exp = ximea_exposure_slider_->value();
-    int zed_exp = zed_exposure_slider_->value();
+    if (flash_duration_ != flash_duration_slider_->value())
+    {
+        flash_duration_ = flash_duration_slider_->value();
+        RCLCPP_INFO(this->get_logger(), "Set flash duration to: %d", flash_duration_);
 
-    QString msg = QString("Updated Settings - Firefly: %1, Ximea: %2, Zed: %3")
-                      .arg(firefly_exp)
-                      .arg(ximea_exp)
-                      .arg(zed_exp);
-    emit newDirectorMessage(msg);
-    RCLCPP_INFO(this->get_logger(), "Settings updated: Firefly=%d, Ximea=%d, Zed=%d",
-                firefly_exp, ximea_exp, zed_exp);
+        auto message = std_msgs::msg::String();
+        message.data = "Flash duration: " + std::to_string(flash_duration_);
+        publisher_->publish(message);
+    }
 
-    // TODO: Add logic here to send these exposure settings to the cameras via ROS.
+    if (firefly_exposure_ != firefly_exposure_slider_->value())
+    {
+        firefly_exposure_ = firefly_exposure_slider_->value();
+        RCLCPP_INFO(this->get_logger(), "Set firefly exposure to: %d", firefly_exposure_);
+
+        auto message = std_msgs::msg::String();
+        message.data = "Firefly exposure: " + std::to_string(firefly_exposure_);
+        publisher_->publish(message);
+    }
+
+    if (ximea_gain_ != ximea_gain_slider_->value())
+    {
+        ximea_gain_ = ximea_gain_slider_->value() / 10.0;
+        RCLCPP_INFO(this->get_logger(), "Set ximea gain to: %.1f", ximea_gain_);
+
+        auto message = std_msgs::msg::String();
+        message.data = "Ximea gain: " + std::to_string(ximea_gain_);
+        publisher_->publish(message);
+    }
+
+    if (ximea_exposure_ != ximea_exposure_slider_->value())
+    {
+        ximea_exposure_ = ximea_exposure_slider_->value();
+        RCLCPP_INFO(this->get_logger(), "Set ximea exposure to: %d", ximea_exposure_);
+
+        auto message = std_msgs::msg::String();
+        message.data = "Ximea exposure: " + std::to_string(ximea_exposure_);
+        publisher_->publish(message);
+    }
 }
 
 // -----------------------------------------------------------------------------

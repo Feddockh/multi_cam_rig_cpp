@@ -14,11 +14,15 @@ XimeaCaptureNode::XimeaCaptureNode()
     std::string image_topic = get_parameter("ximea_image_topic").as_string();
 
     std::string data_dir = get_parameter("data_dir").as_string();
-    if (!data_dir.empty() && data_dir[0] == '~') {
-        const char* home = std::getenv("HOME");
-        if (home != nullptr) {
+    if (!data_dir.empty() && data_dir[0] == '~')
+    {
+        const char *home = std::getenv("HOME");
+        if (home != nullptr)
+        {
             data_dir.replace(0, 1, home);
-        } else {
+        }
+        else
+        {
             RCLCPP_ERROR(this->get_logger(), "HOME environment variable not set.");
         }
     }
@@ -105,7 +109,7 @@ bool XimeaCaptureNode::initialize_camera()
     }
 
     // Set exposure time (in microseconds)
-    stat = xiSetParamInt(xi_handle_, XI_PRM_EXPOSURE, 100000);
+    stat = xiSetParamInt(xi_handle_, XI_PRM_EXPOSURE, exposure_time_);
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to set exposure time.");
@@ -115,7 +119,7 @@ bool XimeaCaptureNode::initialize_camera()
     }
 
     // Set the gain
-    stat = xiSetParamFloat(xi_handle_, XI_PRM_GAIN, 0.0);
+    stat = xiSetParamFloat(xi_handle_, XI_PRM_GAIN, gain_);
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to set gain.");
@@ -266,7 +270,7 @@ cv::Mat XimeaCaptureNode::apply_software_ffc(cv::Mat &raw)
 void XimeaCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr msg)
 {
     // Check if the message starts with "capture "
-    if (msg->data.rfind("capture ", 0) == 0)
+    if (msg->data.rfind("Capture ", 0) == 0)
     {
         // Extract the image ID from the message
         RCLCPP_INFO(this->get_logger(), "Received capture command: %s", msg->data.c_str());
@@ -282,6 +286,62 @@ void XimeaCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr 
         else
         {
             RCLCPP_WARN(this->get_logger(), "XIMEA camera not initialized, cannot capture image.");
+        }
+    }
+    else if (msg->data.rfind("Ximea gain: ", 0) == 0)
+    {
+        try
+        {
+            float new_gain = std::stof(msg->data.substr(12));
+            if (new_gain != gain_)
+            {
+                gain_ = new_gain;
+                XI_RETURN stat = xiSetParamFloat(xi_handle_, XI_PRM_GAIN, gain_);
+                if (stat != XI_OK)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to set gain to %f", gain_);
+                }
+                else
+                {
+                    RCLCPP_INFO(this->get_logger(), "Gain updated to %f", gain_);
+                }
+            }
+            else
+            {
+                RCLCPP_INFO(this->get_logger(), "Gain already set to %f", gain_);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Error parsing gain: %s", e.what());
+        }
+    }
+    else if (msg->data.rfind("Ximea exposure: ", 0) == 0)
+    {
+        try
+        {
+            int new_exposure = std::stoi(msg->data.substr(16));
+            if (new_exposure != exposure_time_)
+            {
+                exposure_time_ = new_exposure;
+                XI_RETURN stat = xiSetParamInt(xi_handle_, XI_PRM_EXPOSURE, exposure_time_);
+                if (stat != XI_OK)
+                {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to set exposure time to %d", exposure_time_);
+                }
+                else
+                {
+                    RCLCPP_INFO(this->get_logger(), "Exposure time updated to %d", exposure_time_);
+                }
+            }
+            else
+            {
+                RCLCPP_INFO(this->get_logger(), "Exposure time already set to %d", exposure_time_);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Error parsing exposure time: %s", e.what());
         }
     }
     else if (msg->data == "FFC calibrate")
