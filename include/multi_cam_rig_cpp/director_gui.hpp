@@ -66,11 +66,11 @@ private:
     QTextEdit *log_area_;
 
     // Middle column widgets (exposure controls)
-    int flash_duration_ = 100; // milliseconds
+    int flash_duration_ = 100; // microseconds
     QLabel *flash_duration_label_;
     QSlider *flash_duration_slider_;
     QLabel *flash_duration_value_label_;
-    int firefly_exposure_ = 100000; // microseconds
+    int firefly_exposure_ = 1000; // microseconds
     QLabel *firefly_exposure_label_;
     QSlider *firefly_exposure_slider_;
     QLabel *firefly_exposure_value_label_;

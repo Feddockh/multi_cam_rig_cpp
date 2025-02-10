@@ -9,6 +9,7 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 #include <filesystem>
+#include "rclcpp/parameter_client.hpp"
 
 class FireflyCaptureNode : public rclcpp::Node
 {
@@ -21,6 +22,9 @@ private:
     void left_image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
     void right_image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
     void check_and_publish_completion();
+    bool set_flash_duration(int duration);
+    bool set_flash_frequency(int frequency);
+    bool set_exposure_time(int time);
 
     // ROS 2 components
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr director_publisher_;
@@ -29,6 +33,9 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr right_image_subscriber_;
 
     int image_id_;
+    int flash_duration_ = 100; // 50 - 300 us
+    int exposure_time_ = 1000; // 100 - 300,000 us
+    int flash_frequency_ = 20; // 1 - 20HZ
 
     // Serial communication
     std::shared_ptr<drivers::common::IoContext> io_context_;

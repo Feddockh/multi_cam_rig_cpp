@@ -108,16 +108,16 @@ DirectorGui::DirectorGui(int argc, char **argv)
     middle_layout->setAlignment(Qt::AlignCenter); // Center the controls vertically
 
     // Flash Duration Control
-    flash_duration_label_ = new QLabel("Flash Duration (1 - 10000)", this);
+    flash_duration_label_ = new QLabel("Flash Duration (10 - 300 us)", this);
     flash_duration_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(flash_duration_label_);
 
     auto flash_duration_layout = new QHBoxLayout();
     flash_duration_slider_ = new QSlider(Qt::Horizontal, this);
-    flash_duration_slider_->setRange(1, 10000);
+    flash_duration_slider_->setRange(50, 300);
     flash_duration_slider_->setMinimumHeight(80);
     flash_duration_slider_->setTickPosition(QSlider::TicksBelow);
-    flash_duration_slider_->setTickInterval(500);
+    flash_duration_slider_->setTickInterval(10);
     flash_duration_slider_->setValue(flash_duration_);
     flash_duration_layout->addWidget(flash_duration_slider_);
 
@@ -130,14 +130,14 @@ DirectorGui::DirectorGui(int argc, char **argv)
             [this](int value) { flash_duration_value_label_->setText(QString::number(value)); });
 
     // Firefly Exposure Control
-    firefly_exposure_label_ = new QLabel("Firefly Exposure (1 - 10000)", this);
+    firefly_exposure_label_ = new QLabel("Firefly Exposure (500 - 100000 us)", this);
     firefly_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(firefly_exposure_label_);
 
     // Create a horizontal layout for the slider and its current value display
     auto firefly_exposure_layout = new QHBoxLayout();
     firefly_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    firefly_exposure_slider_->setRange(1, 100000);
+    firefly_exposure_slider_->setRange(500, 100000);
     firefly_exposure_slider_->setMinimumHeight(80);
     firefly_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     firefly_exposure_slider_->setTickInterval(500);

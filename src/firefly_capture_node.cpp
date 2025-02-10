@@ -38,6 +38,10 @@ FireflyCaptureNode::FireflyCaptureNode()
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to initialize serial port: %s", e.what());
     }
+
+    // Set the flash duration
+    set_flash_duration(flash_duration_);
+    set_flash_frequency(flash_frequency_);
 }
 
 FireflyCaptureNode::~FireflyCaptureNode()
@@ -66,10 +70,32 @@ void FireflyCaptureNode::director_callback(const std_msgs::msg::String::SharedPt
             // Send the trigger message asynchronously
             serial_port_->send(trigger_message);
             // RCLCPP_INFO(this->get_logger(), "Sent serial trigger.");
+
+            // // Read the response (not working)
+            // std::vector<uint8_t> response;
+            // serial_port_->receive(response);
+            // std::string response_str(response.begin(), response.end());
+            // RCLCPP_INFO(this->get_logger(), "Received response: %s", response_str.c_str());
         }
         else
         {
             RCLCPP_ERROR(this->get_logger(), "Serial port not initialized or open.");
+        }
+    }
+    else if (msg->data.rfind("Flash duration: ", 0) == 0)
+    {
+        int new_duration = std::stoi(msg->data.substr(16));
+        set_flash_duration(new_duration);
+    }
+    else if (msg->data.rfind("Firefly exposure: ", 0) == 0) {
+        try {
+            int new_exposure = std::stoi(msg->data.substr(18)); // adjust the substring offset as needed
+            if (!set_exposure_time(new_exposure)) {
+                RCLCPP_ERROR(this->get_logger(), "Failed to update firefly exposure time.");
+            }
+        }
+        catch (const std::exception &e) {
+            RCLCPP_ERROR(this->get_logger(), "Error parsing exposure time: %s", e.what());
         }
     }
 }
@@ -99,6 +125,95 @@ void FireflyCaptureNode::check_and_publish_completion()
         left_image_.reset();
         right_image_.reset();
     }
+}
+
+bool FireflyCaptureNode::set_flash_duration(int duration)
+{
+    if (serial_port_ && serial_port_->is_open())
+    {
+        // Prepare to set the flash duration
+        std::vector<uint8_t> flash_set_message = {'f', '\n'};
+        serial_port_->send(flash_set_message);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Set the flash duration
+        std::string duration_str = std::to_string(duration) + '\n';
+        std::vector<uint8_t> flash_duration_message(duration_str.begin(), duration_str.end());
+        serial_port_->send(flash_duration_message);
+
+        RCLCPP_INFO(this->get_logger(), "Set flash duration to: %d", duration);
+
+        // Update the flash duration
+        flash_duration_ = duration;
+
+        return true;
+    }
+    else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Serial port not initialized or open.");
+        return false;
+    }
+}
+
+bool FireflyCaptureNode::set_flash_frequency(int frequency)
+{
+    if (serial_port_ && serial_port_->is_open())
+    {
+        // Prepare to set the flash frequency
+        std::vector<uint8_t> flash_set_message = {'c', '\n'};
+        serial_port_->send(flash_set_message);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        // Set the flash frequency
+        std::string frequency_str = std::to_string(frequency) + '\n';
+        std::vector<uint8_t> flash_frequency_message(frequency_str.begin(), frequency_str.end());
+        serial_port_->send(flash_frequency_message);
+
+        RCLCPP_INFO(this->get_logger(), "Set flash frequency to: %d", frequency);
+
+        // Update the flash frequency
+        flash_frequency_ = frequency;
+
+        return true;
+    }
+    else
+    {
+        RCLCPP_ERROR(this->get_logger(), "Serial port not initialized or open.");
+        return false;
+    }
+}
+
+bool FireflyCaptureNode::set_exposure_time(int time)
+{
+    // Create a synchronous parameter client for the node that owns the firefly parameters.
+    auto parameter_client = rclcpp::SyncParametersClient::make_shared(this, "/flir_node");
+
+    // Wait for the parameter service to become available (2 seconds timeout).
+    if (!parameter_client->wait_for_service(std::chrono::seconds(2))) {
+        RCLCPP_ERROR(this->get_logger(), "Parameter service for /flir_node not available.");
+        return false;
+    }
+
+    // Create the parameters to update for both left and right firefly cameras.
+    std::vector<rclcpp::Parameter> parameters;
+    parameters.push_back(rclcpp::Parameter("firefly_left.exposure_time", time));
+    parameters.push_back(rclcpp::Parameter("firefly_right.exposure_time", time));
+
+    // Set the parameters and check the results.
+    auto results = parameter_client->set_parameters(parameters);
+    bool success = true;
+    for (const auto &result : results) {
+        if (!result.successful) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to set exposure time: %s", result.reason.c_str());
+            success = false;
+        }
+    }
+    if (success) {
+        RCLCPP_INFO(this->get_logger(), "Exposure time updated to %d for firefly left and right.", time);
+    }
+    return success;
 }
 
 int main(int argc, char *argv[])

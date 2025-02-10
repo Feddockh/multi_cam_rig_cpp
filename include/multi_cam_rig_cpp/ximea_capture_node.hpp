@@ -38,8 +38,8 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_publisher_;
 
     int image_id_;
-    float gain_ = 0.0;
-    int exposure_time_ = 100000; // microseconds
+    float gain_ = 0.0; // -1.5 - 6.0 dB
+    int exposure_time_ = 100000; // 500 - 300,000 us
 
     // XIMEA Camera Handle
     HANDLE xi_handle_;
