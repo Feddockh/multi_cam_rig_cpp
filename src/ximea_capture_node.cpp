@@ -98,8 +98,14 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
-    // Increase the internal buffer queue size (for example, to 10)
-    stat = xiSetParamInt(xi_handle_, XI_PRM_BUFFERS_QUEUE_SIZE, 20);
+    // Seems to make worse?
+    // stat = xiSetParamInt(xi_handle_, XI_PRM_OUTPUT_DATA_BIT_DEPTH, XI_RAW8);
+    // if (stat != XI_OK) {
+    //     RCLCPP_WARN(this->get_logger(), "Failed to set output data bit depth.");
+    // }
+
+    // Increase the internal buffer queue size
+    stat = xiSetParamInt(xi_handle_, XI_PRM_BUFFERS_QUEUE_SIZE, 10);
     if (stat != XI_OK) {
         RCLCPP_ERROR(this->get_logger(), "Failed to set buffers queue size.");
         xiCloseDevice(xi_handle_);
@@ -107,13 +113,17 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
-    // NEW: Increase the number of transport layer buffers committed.
     // This parameter tells the driver how many buffers to commit to the transport layer (e.g., USB)
     // Increasing this value may improve USB transport performance.
-    stat = xiSetParamInt(xi_handle_, XI_PRM_ACQ_TRANSPORT_BUFFER_COMMIT, 40);
+    stat = xiSetParamInt(xi_handle_, XI_PRM_ACQ_TRANSPORT_BUFFER_COMMIT, 20);
     if (stat != XI_OK) {
         RCLCPP_ERROR(this->get_logger(), "Failed to set acq_transport_buffer_commit.");
-        // Optionally, you might choose to continue even if this fails.
+    }
+
+    // Enable data packing to reduce data size (I think this helps, not sure)
+    stat = xiSetParamInt(xi_handle_, XI_PRM_OUTPUT_DATA_PACKING, XI_ON);
+    if (stat != XI_OK) {
+        RCLCPP_WARN(this->get_logger(), "Failed to enable output data packing.");
     }
 
     // NEW: Enable recent frame mode so that xiGetImage returns the most recent frame
@@ -275,7 +285,8 @@ cv::Mat XimeaCaptureNode::apply_software_ffc(cv::Mat &raw)
     {
         RCLCPP_ERROR(this->get_logger(), "Image sizes do not match for FFC. Raw: %dx%d, Dark: %dx%d, Mid: %dx%d",
                      raw.cols, raw.rows, dark_.cols, dark_.rows, mid_.cols, mid_.rows);
-        throw std::runtime_error("Calibration image size mismatch.");
+        // throw std::runtime_error("Calibration image size mismatch.");
+        return raw;
     }
 
     raw.convertTo(raw, CV_32F);
@@ -431,6 +442,20 @@ cv::Mat XimeaCaptureNode::capture_calibrated_image()
     auto start = std::chrono::steady_clock::now();
 
     cv::Mat raw = capture_raw_image();
+
+    // If the raw image is empty, return an empty image
+    if (raw.empty())
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to capture raw image.");
+        return cv::Mat();
+    }
+
+    // If raw image size is 0 by 0, return an empty image
+    if (raw.size().area() == 0)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Raw image size is 0 by 0.");
+        return cv::Mat();
+    }   
 
     // NEW: Log the time to capture the raw image
     auto raw_capture_end = std::chrono::steady_clock::now();
