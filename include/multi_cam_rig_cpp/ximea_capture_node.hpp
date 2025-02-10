@@ -24,9 +24,13 @@ public:
 private:
     void director_callback(const std_msgs::msg::String::SharedPtr msg);
     bool initialize_camera();
-    void capture_image();
-    void init_software_ffc();
+    bool init_software_ffc();
     cv::Mat apply_software_ffc(cv::Mat &raw);
+    cv::Mat capture_raw_image();
+    cv::Mat capture_calibrated_image();
+    void calibrate_ffc();
+    void calibrate_dark();
+    void publish_image(cv::Mat &image);
 
     // ROS 2 components
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr director_publisher_;
@@ -39,15 +43,17 @@ private:
     HANDLE xi_handle_;
     bool camera_initialized_;
 
-    // Image storage
-    cv::Mat image_;
+    // std::string FFC_dir_ = std::string(getenv("HOME")) + "/.local/share/xiCamTool/shading";
+    std::string data_dir_;
+    std::string ffc_dir_;
 
     // FFC files
-    std::string dark_file_;
     std::string mid_file_;
+    std::string dark_file_;
     cv::Mat dark_;
     cv::Mat mid_;
     cv::Mat mid_dark_;
+    cv::Mat FFC_;
     float mid_dark_mean_;
 };
 

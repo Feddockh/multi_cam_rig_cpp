@@ -67,6 +67,7 @@ def generate_launch_description():
         name='ximea_capture_node',
         output='screen',
         parameters=[{
+            'data_dir': data_dir,
             'director_topic': director_topic,
             'ximea_image_topic': ximea_image_topic,
         }]

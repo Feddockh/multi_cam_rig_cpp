@@ -6,11 +6,30 @@ XimeaCaptureNode::XimeaCaptureNode()
     : Node("ximea_capture_node"), xi_handle_(nullptr), camera_initialized_(false)
 {
     // Declare and get parameters
+    declare_parameter("data_dir", "~/tmp");
     declare_parameter<std::string>("director_topic", "/multi_cam_rig/director");
     declare_parameter<std::string>("ximea_image_topic", "/multi_cam_rig/ximea/image");
 
     std::string director_topic = get_parameter("director_topic").as_string();
     std::string image_topic = get_parameter("ximea_image_topic").as_string();
+
+    std::string data_dir = get_parameter("data_dir").as_string();
+    if (!data_dir.empty() && data_dir[0] == '~') {
+        const char* home = std::getenv("HOME");
+        if (home != nullptr) {
+            data_dir.replace(0, 1, home);
+        } else {
+            RCLCPP_ERROR(this->get_logger(), "HOME environment variable not set.");
+        }
+    }
+    data_dir_ = data_dir;
+
+    // Create the FFC directory inside the data directory.
+    ffc_dir_ = data_dir_ + "/ffc";
+    if (!std::filesystem::exists(ffc_dir_))
+    {
+        std::filesystem::create_directories(ffc_dir_);
+    }
 
     // Initialize Publishers
     director_publisher_ = create_publisher<std_msgs::msg::String>(director_topic, 10);
@@ -75,17 +94,17 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
-    // Set auto exposure/gain
-    // stat = xiSetParamInt(xi_handle_, XI_PRM_AEAG, XI_ON);
-    // if (stat != XI_OK)
-    // {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to set auto exposure/gain.");
-    //     xiCloseDevice(xi_handle_);
-    //     xi_handle_ = nullptr;
-    //     return false;
-    // }
+    // Set auto exposure/gain to off
+    stat = xiSetParamInt(xi_handle_, XI_PRM_AEAG, XI_OFF);
+    if (stat != XI_OK)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to set auto exposure/gain.");
+        xiCloseDevice(xi_handle_);
+        xi_handle_ = nullptr;
+        return false;
+    }
 
-    // Set exposure time
+    // Set exposure time (in microseconds)
     stat = xiSetParamInt(xi_handle_, XI_PRM_EXPOSURE, 100000);
     if (stat != XI_OK)
     {
@@ -115,17 +134,6 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
-    // Cannot get auto white balance to work
-    // // Auto white balance
-    // stat = xiSetParamInt(xi_handle_, XI_PRM_AUTO_WB, 1);
-    // if (stat != XI_OK)
-    // {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to set auto white balance.");
-    //     xiCloseDevice(xi_handle_);
-    //     xi_handle_ = nullptr;
-    //     return false;
-    // }
-
     // Set image format
     xiSetParamInt(xi_handle_, XI_PRM_IMAGE_DATA_FORMAT, XI_RAW8);
     if (stat != XI_OK)
@@ -136,52 +144,11 @@ bool XimeaCaptureNode::initialize_camera()
         return false;
     }
 
-    // // Get the FFC files
-    // std::string dark_file, mid_file;
-    // if (!get_ffc(dark_file, mid_file))
-    // {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to get FFC files. Check the shading directory.");
-    //     xiCloseDevice(xi_handle_);
-    //     xi_handle_ = nullptr;
-    //     return false;
-    // }
-
-    /// For the life of me I could not get the FFC files to work. I tried everything I could think of.
-    // // Set the ffc dark field frame
-    // char dark_file[] = "dark.tif";
-    // stat = xiSetParamString(xi_handle_, XI_PRM_FFC_DARK_FIELD_FILE_NAME, dark_file, strlen(dark_file));
-    // RCLCPP_INFO(this->get_logger(), "Setting FFC dark field frame: %s", dark_file);
-    // if (stat != XI_OK)
-    // {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to set FFC dark field frame.");
-    //     xiCloseDevice(xi_handle_);
-    //     xi_handle_ = nullptr;
-    //     return false;
-    // }
-
-    // // Set the ffc flat field frame
-    // char mid_file[] = "mid.tif";
-    // stat = xiSetParamString(xi_handle_, XI_PRM_FFC_FLAT_FIELD_FILE_NAME, mid_file, strlen(mid_file));
-    // RCLCPP_INFO(this->get_logger(), "Setting FFC flat field frame: %s", mid_file);
-    // if (stat != XI_OK)
-    // {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to set FFC flat field frame.");
-    //     xiCloseDevice(xi_handle_);
-    //     xi_handle_ = nullptr;
-    //     return false;
-    // }
-
-    // // Turn on the FFC
-    // stat = xiSetParamInt(xi_handle_, XI_PRM_FFC, XI_ON);
-    // if (stat != XI_OK)
-    // {
-    //     RCLCPP_ERROR(this->get_logger(), "Failed to turn on FFC.");
-    //     xiCloseDevice(xi_handle_);
-    //     xi_handle_ = nullptr;
-    //     return false;
-    // }
-
-    init_software_ffc();
+    // Initialize software FFC
+    if (!init_software_ffc())
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to initialize software FFC.");
+    }
 
     // Start acquisition
     RCLCPP_INFO(this->get_logger(), "Starting acquisition...");
@@ -197,15 +164,13 @@ bool XimeaCaptureNode::initialize_camera()
     return true;
 }
 
-void XimeaCaptureNode::init_software_ffc()
+bool XimeaCaptureNode::init_software_ffc()
 {
-    std::string shading_dir = std::string(getenv("HOME")) + "/.local/share/xiCamTool/shading";
-    
     std::filesystem::file_time_type latest_dark_time;
     std::filesystem::file_time_type latest_mid_time;
 
     // Search for the files in the shading directory
-    for (const auto &entry : std::filesystem::directory_iterator(shading_dir))
+    for (const auto &entry : std::filesystem::directory_iterator(ffc_dir_))
     {
         if (entry.is_regular_file())
         {
@@ -234,7 +199,7 @@ void XimeaCaptureNode::init_software_ffc()
     if (dark_file_.empty() || mid_file_.empty())
     {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to find FFC files in the shading directory.");
-        return;
+        return false;
     }
 
     // Extract the filenames from the paths
@@ -255,7 +220,7 @@ void XimeaCaptureNode::init_software_ffc()
     if (dark_.empty() || mid_.empty())
     {
         RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Failed to load FFC files.");
-        return;
+        return false;
     }
 
     // Convert to float for computation
@@ -267,9 +232,12 @@ void XimeaCaptureNode::init_software_ffc()
 
     // Mean of (mid - dark) for normalization
     mid_dark_mean_ = static_cast<float>(cv::mean(mid_dark_)[0]);
+    FFC_ = mid_dark_mean_ / (mid_dark_ + 1e-6f);
 
     RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Software FFC initialized with dark: %s, mid: %s",
                 dark_file_.c_str(), mid_file_.c_str());
+
+    return true;
 }
 
 cv::Mat XimeaCaptureNode::apply_software_ffc(cv::Mat &raw)
@@ -285,7 +253,7 @@ cv::Mat XimeaCaptureNode::apply_software_ffc(cv::Mat &raw)
     raw.convertTo(raw, CV_32F);
 
     // Apply flat field correction formula (avoid division by zero)
-    cv::Mat corrected_f = (raw - dark_).mul(mid_dark_mean_ / (mid_dark_ + 1e-6f));
+    cv::Mat corrected_f = (raw - dark_).mul(FFC_);
 
     // Clip values to 0-255 and convert back to 8-bit
     cv::Mat clipped, corrected;
@@ -307,22 +275,33 @@ void XimeaCaptureNode::director_callback(const std_msgs::msg::String::SharedPtr 
         // Capture the image
         if (camera_initialized_)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            capture_image();
+            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            cv::Mat img = capture_calibrated_image();
+            publish_image(img);
         }
         else
         {
             RCLCPP_WARN(this->get_logger(), "XIMEA camera not initialized, cannot capture image.");
         }
     }
+    else if (msg->data == "FFC calibrate")
+    {
+        RCLCPP_INFO(this->get_logger(), "Received FFC calibrate command.");
+        calibrate_ffc();
+    }
+    else if (msg->data == "Dark calibrate")
+    {
+        RCLCPP_INFO(this->get_logger(), "Received Dark calibrate command.");
+        calibrate_dark();
+    }
 }
 
-void XimeaCaptureNode::capture_image()
+cv::Mat XimeaCaptureNode::capture_raw_image()
 {
     if (!camera_initialized_ || xi_handle_ == nullptr)
     {
         RCLCPP_WARN(this->get_logger(), "Camera is not initialized.");
-        return;
+        return cv::Mat();
     }
 
     XI_IMG image;
@@ -333,31 +312,151 @@ void XimeaCaptureNode::capture_image()
     if (stat != XI_OK)
     {
         RCLCPP_ERROR(this->get_logger(), "Failed to get image.");
-        return;
+        return cv::Mat();
     }
 
     if (image.bp == nullptr)
     {
         RCLCPP_ERROR(this->get_logger(), "Image buffer is null.");
-        return;
+        return cv::Mat();
     }
 
     RCLCPP_INFO(this->get_logger(), "Image Width: %d, Height: %d, Format: %d", image.width, image.height, image.frm);
 
-    // Ensure the image format matches XI_MONO8 (1 channel)
     cv::Mat cvImageMono(image.height, image.width, CV_8UC1, image.bp);
+    return cvImageMono.clone();
+}
 
-    // Clone the image to ensure data integrity
-    image_ = cvImageMono.clone();
+cv::Mat XimeaCaptureNode::capture_calibrated_image()
+{
+    cv::Mat raw = capture_raw_image();
 
     // Apply software FFC
+    cv::Mat img;
     if (!dark_file_.empty() && !mid_file_.empty())
     {
-        image_ = apply_software_ffc(image_);
+        img = apply_software_ffc(raw);
+    }
+    else
+    {
+        RCLCPP_WARN(this->get_logger(), "FFC files not found, capturing uncalibrated image.");
+        img = raw;
+    }
+    return img;
+}
+
+void XimeaCaptureNode::calibrate_ffc()
+{
+    cv::Mat sum;
+    const int count = 5;
+    for (int i = 0; i < count; i++)
+    {
+        cv::Mat img = capture_raw_image();
+        if (img.empty())
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to capture calibration image %d", i);
+            return;
+        }
+        cv::Mat imgFloat;
+        img.convertTo(imgFloat, CV_32F);
+        if (i == 0)
+            sum = imgFloat;
+        else
+            sum += imgFloat;
+        std::this_thread::sleep_for(100ms);
+    }
+    cv::Mat avg;
+    sum.convertTo(avg, CV_32F, 1.0 / count);
+    avg.convertTo(avg, CV_8U);
+
+    // Generate a new filename based on the current time.
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    char buffer[100];
+    std::strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", std::localtime(&now_c));
+    std::string new_file = std::string(buffer) + "_mid.tif";
+    std::string new_file_path = ffc_dir_ + '/' + new_file;
+
+    if (!cv::imwrite(new_file_path, avg))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to write FFC calibration image to file %s", new_file.c_str());
+        return;
     }
 
+    mid_file_ = new_file;
+    mid_ = avg;
+    if (!dark_.empty())
+    {
+        mid_.convertTo(mid_, CV_32F);
+        dark_.convertTo(dark_, CV_32F);
+        mid_dark_ = mid_ - dark_;
+        mid_dark_mean_ = static_cast<float>(cv::mean(mid_dark_)[0]);
+        FFC_ = mid_dark_mean_ / (mid_dark_ + 1e-6f);
+    }
+    auto msg = std_msgs::msg::String();
+    msg.data = "FFC calibration complete: " + new_file;
+    director_publisher_->publish(msg);
+    RCLCPP_INFO(this->get_logger(), "FFC calibration complete, saved new mid file: %s", new_file.c_str());
+}
+
+void XimeaCaptureNode::calibrate_dark()
+{
+    cv::Mat sum;
+    const int count = 5;
+    for (int i = 0; i < count; i++)
+    {
+        cv::Mat img = capture_raw_image();
+        if (img.empty())
+        {
+            RCLCPP_ERROR(this->get_logger(), "Failed to capture calibration image %d", i);
+            return;
+        }
+        cv::Mat imgFloat;
+        img.convertTo(imgFloat, CV_32F);
+        if (i == 0)
+            sum = imgFloat;
+        else
+            sum += imgFloat;
+        std::this_thread::sleep_for(100ms);
+    }
+    cv::Mat avg;
+    sum.convertTo(avg, CV_32F, 1.0 / count);
+    avg.convertTo(avg, CV_8U);
+
+    // Generate a new filename based on the current time.
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    char buffer[100];
+    std::strftime(buffer, sizeof(buffer), "%Y%m%d_%H%M%S", std::localtime(&now_c));
+    std::string new_file = std::string(buffer) + "_dark.tif";
+    std::string new_file_path = ffc_dir_ + '/' + new_file;
+
+    if (!cv::imwrite(new_file_path, avg))
+    {
+        RCLCPP_ERROR(this->get_logger(), "Failed to write dark calibration image to file %s", new_file.c_str());
+        return;
+    }
+
+    dark_file_ = new_file;
+    dark_ = avg;
+    if (!mid_file_.empty() && !mid_.empty())
+    {
+        mid_.convertTo(mid_, CV_32F);
+        dark_.convertTo(dark_, CV_32F);
+        mid_dark_ = mid_ - dark_;
+        mid_dark_mean_ = static_cast<float>(cv::mean(mid_dark_)[0]);
+        FFC_ = mid_dark_mean_ / (mid_dark_ + 1e-6f);
+    }
+    auto msg = std_msgs::msg::String();
+    msg.data = "Dark calibration complete: " + new_file;
+    director_publisher_->publish(msg);
+    RCLCPP_INFO(this->get_logger(), "Dark calibration complete, saved new dark file: %s", new_file.c_str());
+}
+
+void XimeaCaptureNode::publish_image(cv::Mat &image)
+{
     // Create ROS Image message
-    auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", image_).toImageMsg();
+    auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", image).toImageMsg();
 
     // Publish the image
     image_publisher_->publish(*image_msg);
