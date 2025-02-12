@@ -357,6 +357,16 @@ void DirectorGui::handle_record_button_click()
     }
 }
 
+std::string expandTilde(const std::string &path) {
+    if (!path.empty() && path[0] == '~') {
+        const char *home = getenv("HOME");
+        if (home) {
+            return std::string(home) + path.substr(1);
+        }
+    }
+    return path;
+}
+
 // -----------------------------------------------------------------------------
 // Slot: Rosbag Button (updated to record only required topics)
 // -----------------------------------------------------------------------------
@@ -364,12 +374,53 @@ void DirectorGui::handle_rosbag_button_click()
 {
     if (rosbag_pid_ != -1)
     {
+        // Stop the rosbag recording process
         kill(rosbag_pid_, SIGINT);
+
+        // Wait for the process to fully terminate (necessary before computing the bag size)
+        int status = 0;
+        waitpid(rosbag_pid_, &status, 0);
+
+        // print the path of the recorded bag directory
+        RCLCPP_INFO(this->get_logger(), "Bag directory: %s", current_rosbag_dir_.c_str());
+
+        // Compute the size of the recorded bag directory
+        uintmax_t bag_size_bytes = 0;
+        try {
+            // Expand the directory path if it starts with '~'
+            std::string expanded_dir = expandTilde(current_rosbag_dir_);
+            if (std::filesystem::exists(expanded_dir)) {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(expanded_dir)) {
+                    if (std::filesystem::is_regular_file(entry.path())) {
+                        bag_size_bytes += std::filesystem::file_size(entry.path());
+                    }
+                }
+            } else {
+                RCLCPP_ERROR(this->get_logger(), "Directory does not exist: %s", expanded_dir.c_str());
+            }
+        } catch (const std::filesystem::filesystem_error &e) {
+            RCLCPP_ERROR(this->get_logger(), "Filesystem error: %s", e.what());
+        }
+
+        // Convert bytes to gigabytes.
+        double bag_size_gb = static_cast<double>(bag_size_bytes) / (1024.0 * 1024.0 * 1024.0);
+
+        // Format the size string to two decimal places.
+        std::stringstream sizeStream;
+        sizeStream << std::fixed << std::setprecision(2) << bag_size_gb << " GB";
+
+        // Publish a message with the bag size in GB.
         auto message = std_msgs::msg::String();
-        message.data = "Stopped recording rosbag with PID: " + std::to_string(rosbag_pid_);
+        message.data = "Stopped recording rosbag with PID: " + std::to_string(rosbag_pid_) +
+                       ". Bag size: " + sizeStream.str();
         publisher_->publish(message);
-        status_label_->setText("Stopped recording rosbag");
-        RCLCPP_INFO(this->get_logger(), "Stopped recording rosbag with PID: %d", rosbag_pid_);
+
+        // Update the GUI status.
+        std::string text = "Stopped recording rosbag. Size: " + sizeStream.str();
+        status_label_->setText(QString::fromStdString(text));
+        RCLCPP_INFO(this->get_logger(), "Stopped recording rosbag with PID: %d. Bag size: %s", 
+                    rosbag_pid_, sizeStream.str().c_str());
+        
         rosbag_pid_ = -1;
         rosbag_button_->setStyleSheet("");
     }
@@ -383,6 +434,7 @@ void DirectorGui::handle_rosbag_button_click()
         std::stringstream ss;
         ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S");
         std::string dir_name = data_dir_ + "/rosbag_" + ss.str();
+        current_rosbag_dir_ = dir_name;
 
         // Start the rosbag recording (in the background)
         std::string cmd = "ros2 bag record -o " + dir_name + " " + 
