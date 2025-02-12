@@ -22,27 +22,47 @@ firefly_left:
   adjust_timestamp: true
   acquisition_timeout: 1000.0
   buffer_queue_size: 1
+
   acquisition_mode: 'SingleFrame'
+  acquisition_frame_rate_enable: true
+
   exposure_mode: 'Timed'
   exposure_auto: 'Off'
   exposure_time: 100.0
-  acquisition_frame_rate_enable: true
+
   trigger_mode: 'On'
   trigger_selector: 'FrameStart'
   trigger_source: 'Line3'
   trigger_activation: 'FallingEdge'
+
   line_selector: 'Line3'
   line_mode: 'Input'
-  sensor_shutter_mode: 'Global'
+
   gain_auto: 'Off'
+  gain: 0.0
+
   black_level_selector: 'All'
-  black_level: 0.0
-  black_level_clamping_enable: false
+  black_level: 1.7
+
+  gamma_enable: true
   gamma: 1.0
-  gamma_enable: false
+
+  sharpening_enable: false
+  sharpening: 0.0
+
+  saturation_enable: false
+  saturation: 1.0
+
+  balance_ratio_selector_red: 'Red'
+  balance_ratio_red: 1.43355
+  balance_ratio_selector_blue: 'Blue'
+  balance_ratio_blue: 3.06255
+
   width: 1440
   height: 1080
-  pixel_format: 'BGR8' # Color image
+
+  pixel_format: 'RGB8Packed' # Color image
+
   chunk_mode_active: true
   chunk_selector_frame_id: 'FrameID'
   chunk_enable_frame_id: true
@@ -52,13 +72,14 @@ firefly_left:
   chunk_enable_gain: true
   chunk_selector_timestamp: 'Timestamp'
   chunk_enable_timestamp: true
+
   parameter_file: '__parameter_file__'  # Updated later
 
 firefly_left.exposure_controller:
   brightness_target: 120
   brightness_tolerance: 255
   max_exposure_time: 100000
-  min_exposure_time: 10
+  min_exposure_time: 29
   max_gain: 0.0
   gain_priority: false
   type: 'master'
@@ -74,27 +95,47 @@ firefly_right:
   adjust_timestamp: true
   acquisition_timeout: 1000.0
   buffer_queue_size: 1
+
   acquisition_mode: 'SingleFrame'
+  acquisition_frame_rate_enable: true
+
   exposure_mode: 'Timed'
   exposure_auto: 'Off'
   exposure_time: 100.0
-  acquisition_frame_rate_enable: true
+
   trigger_mode: 'On'
   trigger_selector: 'FrameStart'
   trigger_source: 'Line3'
   trigger_activation: 'FallingEdge'
+
   line_selector: 'Line3'
   line_mode: 'Input'
-  sensor_shutter_mode: 'Global'
+
   gain_auto: 'Off'
+  gain: 0.0
+
   black_level_selector: 'All'
-  black_level: 0.0
-  black_level_clamping_enable: false
+  black_level: 1.7
+
+  gamma_enable: true
   gamma: 1.0
-  gamma_enable: false
+
+  sharpening_enable: false
+  sharpening: 0.0
+
+  saturation_enable: false
+  saturation: 1.0
+
+  balance_ratio_selector_red: 'Red'
+  balance_ratio_red: 1.43355
+  balance_ratio_selector_blue: 'Blue'
+  balance_ratio_blue: 3.06255
+
   width: 1440
   height: 1080
-  pixel_format: 'BGR8' # Color image
+
+  pixel_format: 'RGB8Packed' # Color image
+
   chunk_mode_active: true
   chunk_selector_frame_id: 'FrameID'
   chunk_enable_frame_id: true
@@ -104,13 +145,14 @@ firefly_right:
   chunk_enable_gain: true
   chunk_selector_timestamp: 'Timestamp'
   chunk_enable_timestamp: true
+
   parameter_file: '__parameter_file__'  # Updated later
 
 firefly_right.exposure_controller:
   brightness_target: 120
   brightness_tolerance: 255
   max_exposure_time: 100000
-  min_exposure_time: 10
+  min_exposure_time: 29
   max_gain: 0.0
   gain_priority: false
   type: 'follower'

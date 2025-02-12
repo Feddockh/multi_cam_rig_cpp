@@ -21,6 +21,7 @@
 #include <QGuiApplication>
 #include <chrono>
 #include <QtConcurrent/QtConcurrent>
+#include <sys/wait.h>
 
 class DirectorGui : public QWidget, public rclcpp::Node
 {
@@ -54,6 +55,7 @@ private:
     int image_count_;
     std::string data_dir_;
     int rosbag_pid_ = -1;
+    std::string current_rosbag_dir_;
 
     int window_height_;
     int window_width_;
@@ -65,20 +67,30 @@ private:
     QLabel *status_label_;
     QTextEdit *log_area_;
 
+    // Const values for exposure and gain
+    const int flash_duration_min_ = 0;
+    const int flash_duration_max_ = 500;
+    const int firefly_exposure_min_ = 30;
+    const int firefly_exposure_max_ = 200;
+    const float ximea_gain_min_ = -1.5;
+    const float ximea_gain_max_ = 6.0;
+    const int ximea_exposure_min_ = 1;
+    const int ximea_exposure_max_ = 1000;
+
     // Middle column widgets (exposure controls)
-    int flash_duration_ = 100; // microseconds
+    int flash_duration_ = 100; // 0 - 500 us
     QLabel *flash_duration_label_;
     QSlider *flash_duration_slider_;
     QLabel *flash_duration_value_label_;
-    int firefly_exposure_ = 100; // microseconds
+    int firefly_exposure_ = 100; // 29 - 30000014 us
     QLabel *firefly_exposure_label_;
     QSlider *firefly_exposure_slider_;
     QLabel *firefly_exposure_value_label_;
-    float ximea_gain_ = 0.0; // dB
+    float ximea_gain_ = 0.0; // -1.5 - 6.0 dB
     QLabel *ximea_gain_label_;
     QSlider *ximea_gain_slider_;
     QLabel *ximea_gain_value_label_;
-    int ximea_exposure_ = 1000; // microseconds
+    int ximea_exposure_ = 100; // 1 - 1000000 us
     QLabel *ximea_exposure_label_;
     QSlider *ximea_exposure_slider_;
     QLabel *ximea_exposure_value_label_;

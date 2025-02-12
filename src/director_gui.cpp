@@ -99,7 +99,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     connect(this, &DirectorGui::newDirectorMessage, this, [this](const QString &m)
             { log_area_->append(m); });
 
-    // Add left layout with 1/3 stretch to the main layout
+    // Add left layout with 1/4 stretch to the main layout
     main_layout->addLayout(left_layout, 1); // Stretch factor = 1
 
     // --- Middle Column: Exposure Controls (Using Sliders) ---
@@ -108,13 +108,13 @@ DirectorGui::DirectorGui(int argc, char **argv)
     middle_layout->setAlignment(Qt::AlignCenter); // Center the controls vertically
 
     // Flash Duration Control
-    flash_duration_label_ = new QLabel("Flash Duration (10 - 300 us)", this);
+    flash_duration_label_ = new QLabel(QString("Flash Duration (%1 - %2 us)").arg(flash_duration_min_).arg(flash_duration_max_), this);
     flash_duration_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(flash_duration_label_);
 
     auto flash_duration_layout = new QHBoxLayout();
     flash_duration_slider_ = new QSlider(Qt::Horizontal, this);
-    flash_duration_slider_->setRange(50, 300);
+    flash_duration_slider_->setRange(flash_duration_min_, flash_duration_max_);
     flash_duration_slider_->setMinimumHeight(80);
     flash_duration_slider_->setTickPosition(QSlider::TicksBelow);
     flash_duration_slider_->setTickInterval(10);
@@ -130,14 +130,18 @@ DirectorGui::DirectorGui(int argc, char **argv)
             [this](int value) { flash_duration_value_label_->setText(QString::number(value)); });
 
     // Firefly Exposure Control
-    firefly_exposure_label_ = new QLabel("Firefly Exposure (500 - 100000 us)", this);
+    firefly_exposure_label_ = new QLabel(
+    QString("Firefly Exposure (%1 - %2 us)")
+        .arg(firefly_exposure_min_)
+        .arg(firefly_exposure_max_),
+    this);
     firefly_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(firefly_exposure_label_);
 
     // Create a horizontal layout for the slider and its current value display
     auto firefly_exposure_layout = new QHBoxLayout();
     firefly_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    firefly_exposure_slider_->setRange(10, 200);
+    firefly_exposure_slider_->setRange(firefly_exposure_min_, firefly_exposure_max_);
     firefly_exposure_slider_->setMinimumHeight(80);
     firefly_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     firefly_exposure_slider_->setTickInterval(500);
@@ -154,13 +158,17 @@ DirectorGui::DirectorGui(int argc, char **argv)
             [this](int value) { firefly_exposure_value_label_->setText(QString::number(value)); });
 
     // Ximea Gain Control
-    ximea_gain_label_ = new QLabel("Ximea Gain (-1.5 - 6.0 dB)", this);
+    ximea_gain_label_ = new QLabel(
+    QString("Ximea Gain (%1 - %2 dB)")
+        .arg(ximea_gain_min_)
+        .arg(ximea_gain_max_),
+    this);
     ximea_gain_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(ximea_gain_label_);
 
     auto ximea_gain_layout = new QHBoxLayout();
     ximea_gain_slider_ = new QSlider(Qt::Horizontal, this);
-    ximea_gain_slider_->setRange(-15, 60); // Scale by 10 to handle decimals
+    ximea_gain_slider_->setRange(static_cast<int>(ximea_gain_min_ * 10), static_cast<int>(ximea_gain_max_ * 10));
     ximea_gain_slider_->setMinimumHeight(80);
     ximea_gain_slider_->setTickPosition(QSlider::TicksBelow);
     ximea_gain_slider_->setTickInterval(1);
@@ -176,13 +184,17 @@ DirectorGui::DirectorGui(int argc, char **argv)
             [this](int value) { ximea_gain_value_label_->setText(QString::number(value / 10.0, 'f', 1)); });
 
     // Ximea Exposure Control
-    ximea_exposure_label_ = new QLabel("Ximea Exposure (500 - 10000 us)", this);
+    ximea_exposure_label_ = new QLabel(
+    QString("Ximea Exposure (%1 - %2 us)")
+        .arg(ximea_exposure_min_)
+        .arg(ximea_exposure_max_),
+    this);
     ximea_exposure_label_->setAlignment(Qt::AlignCenter);
     middle_layout->addWidget(ximea_exposure_label_);
 
     auto ximea_exposure_layout = new QHBoxLayout();
     ximea_exposure_slider_ = new QSlider(Qt::Horizontal, this);
-    ximea_exposure_slider_->setRange(500, 10000);
+    ximea_exposure_slider_->setRange(ximea_exposure_min_, ximea_exposure_max_);
     ximea_exposure_slider_->setMinimumHeight(80);
     ximea_exposure_slider_->setTickPosition(QSlider::TicksBelow);
     ximea_exposure_slider_->setTickInterval(500);
@@ -217,7 +229,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
     middle_layout->addWidget(dark_calibrate_button_);
     connect(dark_calibrate_button_, &QPushButton::clicked, this, &DirectorGui::handle_dark_calibrate_button_click);
 
-    // Add middle layout with 1/3 stretch to the main layout
+    // Add middle layout with 1/4 stretch to the main layout
     main_layout->addLayout(middle_layout, 1); // Stretch factor = 1
 
     // --- Right Column: Image Displays ---
@@ -243,8 +255,8 @@ DirectorGui::DirectorGui(int argc, char **argv)
     zed_left_label_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     right_layout->addWidget(zed_left_label_);
 
-    // Add right layout with 1/3 stretch to the main layout
-    main_layout->addLayout(right_layout, 1); // Stretch factor = 1
+    // Add right layout with 2/4 stretch to the main layout
+    main_layout->addLayout(right_layout, 2); // Stretch factor = 2
 
     // Set the main layout as the central layout
     setLayout(main_layout);
@@ -381,7 +393,7 @@ void DirectorGui::handle_rosbag_button_click()
             zed_left_topic_ + " " + 
             zed_right_topic_ + " " + 
             zed_imu_topic_ + 
-            "> /dev/null 2>&1 & echo $!";
+            " > /dev/null 2>&1 & echo $!";
 
         FILE *pipe = popen(cmd.c_str(), "r");
         if (pipe)

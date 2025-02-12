@@ -42,7 +42,7 @@ bool ZedCaptureNode::initialize_camera()
 {
     sl::InitParameters init_params;
     init_params.camera_resolution = sl::RESOLUTION::HD2K;
-    init_params.camera_fps = 30;
+    init_params.camera_fps = 15;
     init_params.coordinate_units = sl::UNIT::MILLIMETER;
     init_params.coordinate_system = sl::COORDINATE_SYSTEM::RIGHT_HANDED_Y_UP;
 
