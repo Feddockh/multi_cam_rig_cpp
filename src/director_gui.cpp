@@ -86,6 +86,10 @@ DirectorGui::DirectorGui(int argc, char **argv)
     // Add log area to the left layout
     log_area_ = new QTextEdit(this);
     log_area_->setReadOnly(true);
+    QFont font = log_area_->font();
+    font.setPointSize(18);
+    font.setBold(true);
+    log_area_->setFont(font);
     log_area_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     left_layout->addWidget(log_area_, 1);
 
@@ -283,7 +287,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
         QTextEdit {
             background-color: #F9F9F9;
             border: 1px solid #DDD;
-            font-size: 14px;
+            font-size: 18px;
             color: #333;
         }
         QSlider::groove:horizontal {
