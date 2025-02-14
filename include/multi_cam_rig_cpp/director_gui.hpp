@@ -75,7 +75,7 @@ private:
     const float ximea_gain_min_ = -1.5;
     const float ximea_gain_max_ = 6.0;
     const int ximea_exposure_min_ = 1;
-    const int ximea_exposure_max_ = 1000;
+    const int ximea_exposure_max_ = 10000;
 
     // Middle column widgets (exposure controls)
     int flash_duration_ = 100; // 0 - 500 us
