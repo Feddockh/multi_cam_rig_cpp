@@ -126,7 +126,7 @@ class DirectorTimeSynchronizer(Node):
         timestamp = self.get_clock().now()
 
         # If the command is 'capture #', open a new request
-        if command.startswith('capture'):
+        if command.startswith('Capture'):
 
             # Get the id number from the command
             id = int(command.split()[1])
