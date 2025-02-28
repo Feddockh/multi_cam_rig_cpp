@@ -19,6 +19,12 @@ from rclpy.duration import Duration
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 
+# TODO: Give ability to pass folder and then run all rosbags within that folder sequentially
+
+# Be sure to run this code using the sim time parameter
+# ros2 run multi_cam_rig_cpp director_time_synchronizer --ros-args -p use_sim_time:=True
+# And be sure to run the ros2 bag play with the clock option
+# ros2 bag play -l -c /path/to/bag.bag --clock
 
 class DirectorRequest:
     def __init__(self, id: int, timestamp: Time, validity_s: float, camera_names: list) -> None:
@@ -194,8 +200,10 @@ class DirectorTimeSynchronizer(Node):
 
         # Save each image
         for cam_name, cv_img in request.images_received.items():
-            filename = f"{stamp_str}_{cam_name}.jpg"
-            out_path = os.path.join(self.output_dir, filename)
+            cam_dir = os.path.join(self.output_dir, cam_name)
+            os.makedirs(cam_dir, exist_ok=True)
+            filename = f"{stamp_str}_{cam_name}.tif"
+            out_path = os.path.join(cam_dir, filename)
             cv2.imwrite(out_path, cv_img)
 
         self.get_logger().info(f"Images saved to {self.output_dir}")
