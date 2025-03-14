@@ -71,11 +71,13 @@ private:
     const int flash_duration_min_ = 0;
     const int flash_duration_max_ = 500;
     const int firefly_exposure_min_ = 30;
-    const int firefly_exposure_max_ = 200;
+    // const int firefly_exposure_max_ = 200;
+    const int firefly_exposure_max_ = 10000;
     const float ximea_gain_min_ = -1.5;
     const float ximea_gain_max_ = 6.0;
     const int ximea_exposure_min_ = 1;
-    const int ximea_exposure_max_ = 10000;
+    // const int ximea_exposure_max_ = 10000;
+    const int ximea_exposure_max_ = 100000;
 
     // Middle column widgets (exposure controls)
     int flash_duration_ = 100; // 0 - 500 us

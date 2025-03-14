@@ -1,0 +1,48 @@
+[ 25%] [34m[1mAutomatic MOC for target firefly_capture_node[0m
+[ 25%] [34m[1mAutomatic MOC for target ximea_capture_node[0m
+[ 25%] [34m[1mAutomatic MOC for target director_gui[0m
+[ 25%] [34m[1mAutomatic MOC for target zed_capture_node[0m
+[ 25%] Built target ximea_capture_node_autogen
+[ 25%] Built target firefly_capture_node_autogen
+[ 25%] Built target zed_capture_node_autogen
+[ 25%] Built target director_gui_autogen
+[35m[1mConsolidate compiler generated dependencies of target ximea_capture_node[0m
+[35m[1mConsolidate compiler generated dependencies of target zed_capture_node[0m
+[35m[1mConsolidate compiler generated dependencies of target firefly_capture_node[0m
+[35m[1mConsolidate compiler generated dependencies of target director_gui[0m
+[ 62%] Built target ximea_capture_node
+[ 62%] Built target zed_capture_node
+[ 81%] Built target firefly_capture_node
+[100%] Built target director_gui
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/lib/multi_cam_rig_cpp/director_gui
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/lib/multi_cam_rig_cpp/firefly_capture_node
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/lib/multi_cam_rig_cpp/ximea_capture_node
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/lib/multi_cam_rig_cpp/zed_capture_node
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/launch/camera_calibration.launch.py
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/launch/firefly_synchronized.launch.py
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/launch/multi_cam_rig.launch.py
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/config/firefly.yaml
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/config/zed2i.yaml
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/calibration/firefly_left.yaml
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/calibration/firefly_left_to_firefly_right_calibration.gz
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/calibration/firefly_right.yaml
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/calibration/zed_left_to_zed_right_calibration.gz
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/lib/multi_cam_rig_cpp/bag_to_images.py
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/lib/multi_cam_rig_cpp/calibration_node.py
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/ament_index/resource_index/package_run_dependencies/multi_cam_rig_cpp
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/ament_index/resource_index/parent_prefix_path/multi_cam_rig_cpp
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/environment/path.sh
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/environment/path.dsv
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/local_setup.bash
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/local_setup.sh
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/local_setup.zsh
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/local_setup.dsv
+-- Symlinking: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/package.dsv
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/ament_index/resource_index/packages/multi_cam_rig_cpp
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/cmake/multi_cam_rig_cppConfig.cmake
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/cmake/multi_cam_rig_cppConfig-version.cmake
+-- Up-to-date symlink: /home/hayden/ros_ws/src/multi_cam_rig_cpp/install/multi_cam_rig_cpp/share/multi_cam_rig_cpp/package.xml

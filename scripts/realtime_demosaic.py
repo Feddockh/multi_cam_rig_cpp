@@ -31,6 +31,11 @@ class DemosaicNode(Node):
             self.get_logger().error(f"Failed to convert image: {e}")
             return
 
+        # Check if the image is empty
+        if cv_image is None:
+            self.get_logger().error("Received empty image.")
+            return
+
         # Optionally, if the image dimensions are not divisible by 5, crop the image
         height, width = cv_image.shape
         if height % 5 != 0 or width % 5 != 0:
