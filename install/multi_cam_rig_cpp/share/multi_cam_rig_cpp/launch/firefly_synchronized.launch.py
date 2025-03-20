@@ -1,1 +1,0 @@
-/home/hayden/ros_ws/src/multi_cam_rig_cpp/launch/firefly_synchronized.launch.py

@@ -1,4 +1,0 @@
-Invoking command in '/home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp -- -j12 -l12
-Invoked command in '/home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp -- -j12 -l12
-Invoking command in '/home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp
-Invoked command in '/home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp

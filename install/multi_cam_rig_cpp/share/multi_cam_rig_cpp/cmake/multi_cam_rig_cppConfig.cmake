@@ -1,1 +1,0 @@
-/home/hayden/ros_ws/src/multi_cam_rig_cpp/build/multi_cam_rig_cpp/ament_cmake_core/multi_cam_rig_cppConfig.cmake
