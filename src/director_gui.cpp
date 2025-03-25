@@ -314,7 +314,7 @@ DirectorGui::DirectorGui(int argc, char **argv)
 // -----------------------------------------------------------------------------
 void DirectorGui::handle_capture_button_click()
 {
-    auto message = std_msgs::msg::String();
+    auto message = std_msgs::msg::String(); // TODO: Switch director messages to stamped messages
     message.data = "Capture " + std::to_string(image_count_++);
     publisher_->publish(message);
 
