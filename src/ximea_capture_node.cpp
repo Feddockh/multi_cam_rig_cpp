@@ -595,6 +595,13 @@ void XimeaCaptureNode::publish_image(cv::Mat &image)
     // NEW: Start timing before conversion.
     auto start = std::chrono::steady_clock::now();
 
+    // TODO: Create a header and set the timestamp.
+    // std_msgs::msg::Header header;
+    // header.stamp = this->get_clock()->now();  // Set the current time.
+
+    // // Create ROS Image message with the header.
+    // auto image_msg = cv_bridge::CvImage(header, "mono8", image).toImageMsg();
+
     // Create ROS Image message
     auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", image).toImageMsg();
 

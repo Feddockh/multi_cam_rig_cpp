@@ -440,6 +440,7 @@ void DirectorGui::handle_rosbag_button_click()
         std::string dir_name = data_dir_ + "/rosbag_" + ss.str();
         current_rosbag_dir_ = dir_name;
 
+        // TODO: Implement ros2 bag recorder in C++ https://docs.ros.org/en/rolling/Tutorials/Advanced/Recording-A-Bag-From-Your-Own-Node-Py.html
         // Start the rosbag recording (in the background)
         std::string cmd = "ros2 bag record -o " + dir_name + " " + 
             director_topic_ + " " + 
