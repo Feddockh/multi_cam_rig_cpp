@@ -454,8 +454,8 @@ def main():
 
     # # Expand the data folder path if it contains '~'
     # data_dir = os.path.expanduser(data_dir)
-    data_dir = "/home/hayden/cmu/kantor_lab/ros2_ws/calibration_images"
-    # data_dir = "/home/hayden/cmu/kantor_lab/calibration/charuco_board3_3-28/images"
+    # data_dir = "/home/hayden/cmu/kantor_lab/ros2_ws/calibration_images"
+    data_dir = "/home/hayden/cmu/kantor_lab/calibration/charuco_board3_3-28/images"
 
     # Construct the camera objects
     firefly_left = Camera("firefly_left")

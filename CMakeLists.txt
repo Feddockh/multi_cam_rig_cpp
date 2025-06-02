@@ -114,14 +114,14 @@ install(DIRECTORY
     DESTINATION share/${PROJECT_NAME}
 )
 
-# Install the scripts
-install(PROGRAMS 
-    scripts/bag_to_images.py
-    DESTINATION lib/${PROJECT_NAME}
-)
-install(PROGRAMS 
-    scripts/calibration_node.py
-    DESTINATION lib/${PROJECT_NAME}
-)
+# # Install the scripts
+# install(PROGRAMS 
+#     scripts/bag_to_images.py
+#     DESTINATION lib/${PROJECT_NAME}
+# )
+# install(PROGRAMS 
+#     scripts/calibration_node.py
+#     DESTINATION lib/${PROJECT_NAME}
+# )
 
 ament_package()
